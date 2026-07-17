@@ -18,10 +18,6 @@
 
 # 0.99.9
 
-- Prediction of cell types
-
-# 0.99.9
-
 - Bugfixes in hyperframe building
 
 # 0.99.10

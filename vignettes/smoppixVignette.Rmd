@@ -14,7 +14,7 @@ vignette: >
 bibliography: ../inst/REFERENCES.bib 
 ---
 
-```{r, echo=FALSE}
+```{r smoppiximage, echo=FALSE}
 htmltools::img(src = knitr::image_uri("../inst/Smoppix.jpg"), 
                style = 'position:absolute; top:0; right:0; padding:10px;',
                alt = 'logo', width = "200px", heigth = "200px")
