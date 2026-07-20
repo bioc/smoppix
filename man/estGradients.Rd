@@ -72,7 +72,7 @@ For estGradientsSingle(), a list containing
 For getPvaluesGradient(), a vector of p-values
 }
 \description{
-estGradients() estimate gradients on all single-molecule point patterns of a hyperframe. 
+estGradients() estimate gradients on all single-molecule point patterns of a hyperframe.
 estGradientsSingle() is the workhorse function for a single point pattern.
 getPvaluesGradient() extracts the p-values of the fits.
 }
@@ -99,17 +99,19 @@ hypYang <- buildHyperFrame(Yang,
 )
 yangGrads <- estGradients(hypYang[seq_len(2), ],
     features = getFeatures(hypYang)[1],
-    fixedEffects = "day", randomEffects = "root")
+    fixedEffects = "day", randomEffects = "root"
+)
 # Gradients within cell
 data(Eng)
-hypEng <- buildHyperFrame(Eng[Eng$fov \%in\% c(1,2),], 
+hypEng <- buildHyperFrame(Eng[Eng$fov \%in\% c(1, 2), ],
     coordVars = c("x", "y"),
     imageVars = c("fov", "experiment")
-) #Subset for speed
+) # Subset for speed
 hypEng <- addCell(hypEng, EngRois[rownames(hypEng)], verbose = FALSE)
 # Limit number of cells and genes for computational reasons
-engGrads <- estGradients(hypEng[seq_len(2),],
-    features = feat <- getFeatures(hypEng)[1])
+engGrads <- estGradients(hypEng[seq_len(2), ],
+    features = feat <- getFeatures(hypEng)[1]
+)
 pVals <- getPvaluesGradient(engGrads, "cell")
 }
 \seealso{

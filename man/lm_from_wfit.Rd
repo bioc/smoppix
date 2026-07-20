@@ -20,13 +20,16 @@ A object of class lm
 Add compoments to a result from lm.wfit to make it a minimally valid lm object
 }
 \examples{
-n <- 7 ; p <- 2
+n <- 7
+p <- 2
 X <- matrix(rnorm(n * p), n, p) # no intercept!
 y <- rnorm(n)
 w <- rnorm(n)^2
 lmw <- lm.wfit(x = X, y = y, w = w)
-lmObject <- lm_from_wfit(lmw, y = y, Terms = terms(Y~X), 
-Assign = attr(model.matrix(~X), "assign"))
+lmObject <- lm_from_wfit(lmw,
+    y = y, Terms = terms(Y ~ X),
+    Assign = attr(model.matrix(~X), "assign")
+)
 summary(lmObject)
 anova(lmObject)
 }

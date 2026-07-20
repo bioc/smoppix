@@ -16,7 +16,7 @@ The adapted dataframe
 Center numeric variables
 }
 \examples{
-df = data.frame(a = rnorm(10), b = sample(c(TRUE, FALSE), 10, replace = TRUE))
-dfCen = centerNumeric(df)
+df <- data.frame(a = rnorm(10), b = sample(c(TRUE, FALSE), 10, replace = TRUE))
+dfCen <- centerNumeric(df)
 mean(dfCen$a)
 }

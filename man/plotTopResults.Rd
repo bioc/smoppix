@@ -68,10 +68,11 @@ features more regular at level1 of the variable than at baseline.
 \examples{
 example(fitLMMs, "smoppix")
 plotTopResults(hypYang, lmmModels, "nn")
-#For the sake of illustration, set high significance level, as example dataset is small
+# For the sake of illustration, set high significance level, as example dataset is small
 plotTopResults(hypYang, lmmModels, "nn",
     effect = "day", what = "reg",
-    effectParameter = "day0", sigLevel = 1-1e-10)
+    effectParameter = "day0", sigLevel = 1 - 1e-10
+)
 }
 \seealso{
 \link{plotCells},\link{plotExplore},\link{fitLMMs}

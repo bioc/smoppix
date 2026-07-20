@@ -86,7 +86,7 @@ from a linear model.
 Genes or gene pairs with insufficient observations will be silently
 omitted. When randomVars is provided as a vector, independent random
 intercepts are fitted for them by default. Providing them separated by '\' or
-':' as in the lmer formulas is also allowed to reflect nesting structure, 
+':' as in the lmer formulas is also allowed to reflect nesting structure,
 but the safest is to construct the formula yourself and pass it onto fitLMMs.
 
 It is by default assumed that random effects are nested within the point
@@ -97,7 +97,7 @@ It is by default assumed that random effects are nested within the point
 \examples{
 example(addWeightFunction, "smoppix")
 lmmModels <- fitLMMs(yangObj, fixedVars = "day", randomVars = "root")
-res <- getResults(lmmModels, "nn", "Intercept") #Extract the results
+res <- getResults(lmmModels, "nn", "Intercept") # Extract the results
 head(res)
 }
 \seealso{

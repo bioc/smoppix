@@ -116,7 +116,7 @@ functions.
 }
 \description{
 Estimate different probabilistic indices for localization
-on all point patterns of a hyperframe, and integrate the results in the same hyperframe. 
+on all point patterns of a hyperframe, and integrate the results in the same hyperframe.
 estPisSingle() is the workhorse function for a single point pattern.
 
 addWeightFunction() adds a weighting function based on the data to the object by modeling variance as a
@@ -140,7 +140,7 @@ The suffix 'Cell' indicates that nearest neighbour distances are being calculate
 It can be useful to set the minObsNN higher than the default of 5 for calculations within cells when the number of events is low,
 not to waste computation time on gene (pairs) with very variable PI estimates.
 
-Provide either 'designVars' or 'lowestLevelVar'. The 'designVars' are 
+Provide either 'designVars' or 'lowestLevelVar'. The 'designVars' are
 usually the same as the regressors in the linear model. In case 'lowestLevelVar' is provided, the
 design variables are set to all imageVars in the hypFrame object except
 lowestLevelVar. When the PI is calculated on the cell level ("nnCell" or "nnPairCell"),
@@ -157,13 +157,17 @@ hypYang <- buildHyperFrame(Yang,
     coordVars = c("x", "y"),
     imageVars = c("day", "root", "section")
 )
-yangPims <- estPis(hypYang[c(seq_len(4), seq(27, 29)), ], pis = "nn",
-    nPointsAll = 4e2)
+yangPims <- estPis(hypYang[c(seq_len(4), seq(27, 29)), ],
+    pis = "nn",
+    nPointsAll = 4e2
+)
 # Univariate nearest neighbour distances
-yangObj <- addWeightFunction(yangPims, designVars = c("day", "root")) 
-# Add the weight functions 
-yangObj <- addWeightFunction(yangPims, lowestLevelVar = "section", 
-pi = "nn")
+yangObj <- addWeightFunction(yangPims, designVars = c("day", "root"))
+# Add the weight functions
+yangObj <- addWeightFunction(yangPims,
+    lowestLevelVar = "section",
+    pi = "nn"
+)
 # Alternative formulation with 'lowestLevelVar'
 }
 \references{

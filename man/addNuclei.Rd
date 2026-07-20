@@ -38,7 +38,7 @@ The hyperframe with nuclei added as entry
 Add the nuclei identifiers to a hyperframe already containing cells.
 }
 \details{
-The nuclei names must match the cell names already present, all other nuclei are dropped. 
+The nuclei names must match the cell names already present, all other nuclei are dropped.
 A warning is issued when nuclei are not encompassed by their cell.
 }
 \examples{

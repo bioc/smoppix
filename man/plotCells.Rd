@@ -39,7 +39,7 @@ plotCells(
 \item{warnPosition}{A boolean, should a warning be printed on the
 image that cells are not in their original location?}
 
-\item{summaryFun}{A function to summarize the gene-cell table in case multiple 
+\item{summaryFun}{A function to summarize the gene-cell table in case multiple
 genes are plotted, to determine which cells are plotted.
 Choose "min" for cells with the highest minimum, or "sum" for highest total expression
 of the combination of genes}
@@ -51,7 +51,7 @@ of the combination of genes}
 \item{scaleBarSize}{A vector of length 2 with the width and height of the scale bars,
 in the units of the original point patterns. See details.}
 
-\item{scaleBarSpace}{Space reserved for the scale bars. Enlarge this when the 
+\item{scaleBarSpace}{Space reserved for the scale bars. Enlarge this when the
 scale bars appear attached to the edge of the cell}
 
 \item{...}{Additional arguments, currently ignored}
@@ -67,8 +67,8 @@ The choice and ranking of cells is one of decreasing gene (pair) expression.
 }
 \details{
 The width of the scale bar (first element of scaleBarSize) is fixed and the same for all scalebars.
-The height of the scale bar will be resized together with the cells to always represent the same physical distance. 
-Adding scale bars tacitly assumes that all point patterns are on the same scale. 
+The height of the scale bar will be resized together with the cells to always represent the same physical distance.
+Adding scale bars tacitly assumes that all point patterns are on the same scale.
 The scale bar units are the same as for the rest of the hyperframe.
 }
 \examples{

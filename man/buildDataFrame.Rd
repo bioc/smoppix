@@ -42,7 +42,8 @@ example(addWeightFunction, "smoppix")
 dfUniNN <- buildDataFrame(yangObj, gene = "SmVND2", pi = "nn")
 # Example analysis with linear mixed model
 library(lmerTest)
-mixedMod <- lmer(pi - 0.5 ~ day + (1 | root), weight = weight, data = dfUniNN,
+mixedMod <- lmer(pi - 0.5 ~ day + (1 | root),
+    weight = weight, data = dfUniNN,
     contrasts = list("day" = "contr.sum")
 )
 summary(mixedMod)

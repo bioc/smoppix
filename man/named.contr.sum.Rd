@@ -20,6 +20,6 @@ After
 https://stackoverflow.com/questions/24515892/r-how-to-contrast-code-factors-and-retain-meaningful-labels-in-output-summary
 }
 \examples{
-fac = sample(c(TRUE, FALSE), 10, replace = TRUE)
+fac <- sample(c(TRUE, FALSE), 10, replace = TRUE)
 named.contr.sum(fac)
 }
