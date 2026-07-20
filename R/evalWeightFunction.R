@@ -9,15 +9,19 @@
 #' @export
 #' @examples
 #' data(Yang)
-#' hypYang <- buildHyperFrame(Yang, coordVars = c("x", "y"),
-#'     imageVars = c("day", "root", "section"))
-#' yangPims <- estPis(hypYang, pis = "nn", 
-#' features = getFeatures(hypYang)[10:19], nPointsAll = 8e2)
+#' hypYang <- buildHyperFrame(Yang,
+#'     coordVars = c("x", "y"),
+#'     imageVars = c("day", "root", "section")
+#' )
+#' yangPims <- estPis(hypYang,
+#'     pis = "nn",
+#'     features = getFeatures(hypYang)[10:19], nPointsAll = 8e2
+#' )
 #' # First Build the weighting function
 #' yangObj <- addWeightFunction(yangPims, designVars = c("day", "root"))
 #' evalWeightFunction(yangObj$Wfs$nn, newdata = data.frame("NP" = 2))
 #' @seealso \link[mgcv]{predict.gam}, \link{addWeightFunction}
 evalWeightFunction <- function(wf, newdata) {
     1 / exp(predict.gam(wf, newdata = as.data.frame(newdata)))
-  #Dirty fix
+    # Dirty fix
 }

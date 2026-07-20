@@ -14,6 +14,6 @@
 getFeatures <- function(x) {
     unique(unlist(lapply(getHypFrame(x)$tabObs, names)))
 }
-getEstFeatures <- function(x){
-    x$features 
+getEstFeatures <- function(x) {
+    x$features
 }

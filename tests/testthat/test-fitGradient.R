@@ -8,7 +8,8 @@ test_that("fitGradient has correct return", {
         silent = TRUE, fixedForm = formula("ppp ~ id:x + id:y + id"),
         fixedFormSimple = formula("ppp ~ id"), randomForm = NULL
     )
-    expect_true(fg$pVal < 1 && fg$pVal > 0)
+    expect_true(fg$pVal < 1)
+    expect_true(fg$pVal > 0)
     expect_length(fg$coef, numPPPs * 3)
     expect_s3_class(fitGradient(hyp1,
         silent = TRUE, fixedForm = formula("ppp ~ id:x + id:y + id"),
@@ -25,7 +26,7 @@ test_that("fitGradient fails where appropriate", {
 test_that("estGradients has correct return", {
     yangGrads <- estGradients(hypYang[seq_len(2), ], features = feat <- getFeatures(hypYang)[seq_len(2)])
     expect_is(yangGrads, "list")
-    expect_identical(names(yangGrads), feat)
+    expect_named(yangGrads, feat)
 })
 test_that("estGradients throws errors where appropriate", {
     expect_error(estGradients(hypYang, gradients = "x"))
@@ -36,8 +37,8 @@ test_that("estGradients throws errors where appropriate", {
 })
 test_that("estGradients works for cells as well", {
     engGrads <- estGradients(hypEng[idEng <- seq_len(2), ], features = feat <- getFeatures(hypEng)[seq_len(2)])
-    expect_equal(names(engGrads), feat)
-    expect_equal(names(engGrads[[1]]), c("overall", "cell"))
+    expect_named(engGrads, feat)
+    expect_named(engGrads[[1]], c("overall", "cell"))
     expect_true(engGrads[[1]]$overall$pVal >= 0 & engGrads[[1]]$overall$pVal <= 1)
     engGradsCell <- estGradients(hypEng[idEng, ],
         features = feat <- getFeatures(hypEng)[seq_len(2)],

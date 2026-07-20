@@ -1,6 +1,6 @@
 context("Test conversion to owins")
 if (requireNamespace("RImageJROI")) {
-    path <- file.path(system.file(package = "RImageJROI"), "extdata", "ijroi")
+    path <- system.file("extdata", "ijroi", package = "RImageJROI")
     rect <- RImageJROI::read.ijroi(file.path(path, "rect.roi"))
     poly <- RImageJROI::read.ijroi(file.path(path, "polygon.roi"))
     oval <- RImageJROI::read.ijroi(file.path(path, "oval.roi"))

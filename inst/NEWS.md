@@ -176,3 +176,7 @@
 # 1.5.3
 
  - Update citation file to main publication
+ 
+# 1.5.4
+
+ - Cleaning code with the help of the goodpractice suggestions

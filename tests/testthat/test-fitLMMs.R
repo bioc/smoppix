@@ -20,20 +20,21 @@ test_that("Fitting linear mixed models proceeds without errors", {
         features = getFeatures(yangPims)[15:18],
         fixedVars = "day", pi = "nn"
     ), "list")
-    expect_is(linModsNNPair <- fitLMMs(yangPims, 
-                                       features = getFeatures(yangPims)[15:18],
+    expect_is(linModsNNPair <- fitLMMs(yangPims,
+        features = getFeatures(yangPims)[15:18],
         fixedVars = "day", pi = "nnPair"
     ), "list")
     expect_is(linMModsNN <- fitLMMs(yangPims,
-                                    features = getFeatures(yangPims)[15:18],
+        features = getFeatures(yangPims)[15:18],
         fixedVars = "day", randomVars = "root", pi = "nn"
     ), "list")
     expect_is(linMModsNNPair <- fitLMMs(yangPims,
-                                        features = getFeatures(yangPims)[15:18],
+        features = getFeatures(yangPims)[15:18],
         fixedVars = "day", randomVars = "root", pi = "nnPair"
     ), "list")
     # Returning the models
-    expect_is(linModsNNfull <- fitLMMs(yangPims,features = getFeatures(yangPims)[15:18],
+    expect_is(linModsNNfull <- fitLMMs(yangPims,
+        features = getFeatures(yangPims)[15:18],
         fixedVars = "day", pi = "nn", returnModels = TRUE
     ), "list")
     expect_is(
@@ -47,7 +48,8 @@ test_that("Fitting linear mixed models proceeds without errors", {
     expect_s4_class(linMModsNNfull[["nn"]]$models[[getFeatures(yangPims)[[15]]]], "lmerModLmerTest")
     expect_is(linModsMP <- fitLMMs(objBG,
         returnModels = TRUE, features = getFeatures(objBG)[1:5],
-        fixedVars = "condition", pi = "centroid"), "list")
+        fixedVars = "condition", pi = "centroid"
+    ), "list")
     expect_is(getResults(linModsMP, "centroid", "Intercept"), "matrix")
     expect_s4_class(linModsMP[["centroid"]]$models[[1]], "lmerModLmerTest")
     expect_is(linModsEdge <- fitLMMs(objBG,
@@ -69,12 +71,12 @@ test_that("Fitting linear mixed models proceeds without errors", {
     expect_is(linModsMidCellType <- fitLMMs(objBG,
         features = getFeatures(objBG)[1:5],
         fixedVars = c("condition", "cellType"), pi = "centroid",
-        returnModels = TRUE,
+        returnModels = TRUE
     ), "list")
     expect_s4_class(linModsMidCellType[["centroid"]]$models[[1]], "lmerModLmerTest")
     expect_is(linModsNNCellType <- fitLMMs(objBG,
         features = getFeatures(objBG)[1:3],
-        fixedVars = c("condition", "cellType"), pi = "nnCell",
+        fixedVars = c("condition", "cellType"), pi = "nnCell"
     ), "list")
     expect_warning(fitLMMs(objBG, fixedVars = c("condition", "cellType"), pis = c(
         "nn",

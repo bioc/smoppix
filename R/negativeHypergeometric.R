@@ -78,5 +78,5 @@
 #' @export
 
 pnhyper <- function(q, n, m, r, lower.tail = TRUE, log.p = FALSE) {
-  cpp_pnhyper(q, n, m, r, lower.tail[1L], log.p[1L])
+    cpp_pnhyper(q, n, m, r, lower.tail[1L], log.p[1L])
 }

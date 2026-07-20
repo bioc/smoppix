@@ -31,26 +31,35 @@
 #' @examples
 #' example(fitLMMs, "smoppix")
 #' plotTopResults(hypYang, lmmModels, "nn")
-#' #For the sake of illustration, set high significance level, as example dataset is small
+#' # For the sake of illustration, set high significance level, as example dataset is small
 #' plotTopResults(hypYang, lmmModels, "nn",
 #'     effect = "day", what = "reg",
-#'     effectParameter = "day0", sigLevel = 1-1e-10)
+#'     effectParameter = "day0", sigLevel = 1 - 1e-10
+#' )
 plotTopResults <- function(hypFrame, results, pi, effect = "Intercept",
-                           what = if (pi %in% c("nn", "nnCell")) {
-                               "aggregated"
-                           } else if (pi %in% c("nnPair", "nnPairCell")) {
-                               "colocalized"
-                           } else if (pi %in% c("edge", "centroid")) {
-                               "close"
-                           }, sigLevel = 0.05, numFeats = 2,
-                           piThreshold = switch(effect, Intercept = 0.5, 0),
-                           effectParameter = NULL, ...) {
-    stopifnot(is.hyperframe(hypFrame), is.character(what), sigLevel > 0,
-              sigLevel < 1)
+    what = if (pi %in% c("nn", "nnCell")) {
+        "aggregated"
+    } else if (pi %in% c("nnPair", "nnPairCell")) {
+        "colocalized"
+    } else if (pi %in% c("edge", "centroid")) {
+        "close"
+    }, sigLevel = 0.05, numFeats = 2,
+    piThreshold = switch(effect,
+        Intercept = 0.5,
+        0
+    ),
+    effectParameter = NULL, ...) {
+    stopifnot(
+        is.hyperframe(hypFrame), is.character(what), sigLevel > 0,
+        sigLevel < 1
+    )
     pi <- match.arg(pi, choices = c(
-        "nn", "nnPair", "edge", "centroid", "nnCell", "nnPairCell"))
-    what <- match.arg(what, choices = c("close", "far", "regular", "aggregated",
-                                        "antilocalized", "colocalized"))
+        "nn", "nnPair", "edge", "centroid", "nnCell", "nnPairCell"
+    ))
+    what <- match.arg(what, choices = c(
+        "close", "far", "regular", "aggregated",
+        "antilocalized", "colocalized"
+    ))
     smallPI <- if (what %in% c("far", "regular", "antilocalized")) {
         FALSE
     } else if (what %in% c("close", "aggregated", "colocalized")) {

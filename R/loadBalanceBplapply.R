@@ -1,6 +1,6 @@
 #' Parallel processing with BiocParallel with load balancing
 #' @description The vector to iterate over (iterator) is split into as many parts as there are
-#' cores available, such that each core gets an equal load and overhead is minimized. 
+#' cores available, such that each core gets an equal load and overhead is minimized.
 #' The registered backend is then used by default to multithread using \link[BiocParallel]{bplapply}.
 #'
 #' @param iterator The vector to iterate over
@@ -13,7 +13,7 @@
 #' @examples
 #' library(BiocParallel)
 #' loadBalanceBplapply(LETTERS, length)
-loadBalanceBplapply <- function(iterator, func, loopFun = if(bpnworkers(bpparam())==1) "lapply" else "bplapply"){
+loadBalanceBplapply <- function(iterator, func, loopFun = if (bpnworkers(bpparam()) == 1) "lapply" else "bplapply") {
     loopFunMatched <- match.fun(loopFun)
     if (loopFun == "lapply") {
         loopFunMatched(iterator, func)

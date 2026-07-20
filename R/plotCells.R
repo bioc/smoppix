@@ -12,7 +12,7 @@
 #' @param borderCols Colour palette for the borders
 #' @param warnPosition A boolean, should a warning be printed on the
 #'  image that cells are not in their original location?
-#' @param summaryFun A function to summarize the gene-cell table in case multiple 
+#' @param summaryFun A function to summarize the gene-cell table in case multiple
 #' genes are plotted, to determine which cells are plotted.
 #' Choose "min" for cells with the highest minimum, or "sum" for highest total expression
 #' of the combination of genes
@@ -20,40 +20,42 @@
 #' @param nucCol A character string, the colour in which the nucleus' boundary is plotted
 #' @param scaleBarSize A vector of length 2 with the width and height of the scale bars,
 #'  in the units of the original point patterns. See details.
-#' @param scaleBarSpace Space reserved for the scale bars. Enlarge this when the 
+#' @param scaleBarSpace Space reserved for the scale bars. Enlarge this when the
 #'  scale bars appear attached to the edge of the cell
 #' @param ... Additional arguments, currently ignored
 #' @inheritParams plotExplore
-#' 
+#'
 #' @return Plots cells with highest expression to the plotting window, returns invisible
 #' @export
 #' @importFrom spatstat.geom plot.owin subset.ppp owin
 #' @importFrom graphics points text rect
 #' @details The width of the scale bar (first element of scaleBarSize) is fixed and the same for all scalebars.
-#' The height of the scale bar will be resized together with the cells to always represent the same physical distance. 
-#' Adding scale bars tacitly assumes that all point patterns are on the same scale. 
+#' The height of the scale bar will be resized together with the cells to always represent the same physical distance.
+#' Adding scale bars tacitly assumes that all point patterns are on the same scale.
 #' The scale bar units are the same as for the rest of the hyperframe.
 #' @examples
 #' example(addCell, "smoppix")
 #' plotCells(hypFrame2, "gene1")
 #' plotCells(hypFrame2, "gene1", borderColVar = "condition", nCells = 10, scaleBarSize = c(.008, .1))
-plotCells <- function(obj, features = getFeatures(obj)[seq_len(3)], nCells = 100,
-    Cex = 1.5, borderColVar = NULL, borderCols = rev(palette()), Mar = c(0.5, 0.1,0.75, 0.1), 
-    warnPosition = TRUE, summaryFun = "min",
-    plotNuclei = !is.null(getHypFrame(obj)$nuclei), nucCol = "lightblue", 
-    scaleBarSize = NULL, scaleBarSpace = 10, ...) {
+plotCells <- function(
+      obj, features = getFeatures(obj)[seq_len(3)], nCells = 100,
+      Cex = 1.5, borderColVar = NULL, borderCols = rev(palette()), Mar = c(0.5, 0.1, 0.75, 0.1),
+      warnPosition = TRUE, summaryFun = "min",
+      plotNuclei = !is.null(getHypFrame(obj)$nuclei), nucCol = "lightblue",
+      scaleBarSize = NULL, scaleBarSpace = 10, ...
+) {
     if (!is.hyperframe(obj)) {
         obj <- getHypFrame(obj)
     }
-    if(is.null(obj$owins)){
-      stop("No windows present in object! Add them using addCell() first.")
+    if (is.null(obj$owins)) {
+        stop("No windows present in object! Add them using addCell() first.")
     }
     addScaleBar <- !is.null(scaleBarSize)
     stopifnot(!addScaleBar || length(scaleBarSize) == 2)
     summaryFun <- match.fun(summaryFun)
     colourBorder <- !is.null(borderColVar)
     old.par <- par(no.readonly = TRUE)
-    on.exit(par(old.par))
+    on.exit(par(old.par), add = TRUE)
     par(mar = Mar)
     features <- unique(unlist(lapply(features, sund)))
     stopifnot(is.hyperframe(obj), length(nCells) == 1, all(features %in%
@@ -127,21 +129,26 @@ plotCells <- function(obj, features = getFeatures(obj)[seq_len(3)], nCells = 100
         for (j in seq_along(tablesCell[[nam]])) {
             namIn <- names(tablesCell[[nam]])[j]
             shifted <- toUnitSquare(obj[[nam, "owins"]][[namIn]],
-                         ppp = subset.ppp(ppp, cell == namIn),
-                         Shift = shiftVec(counter, Ceils[1]),
-                         nuclei = if(plotNuclei) obj[[nam, "nuclei"]][namIn],
-                         scaleBarSize = if(addScaleBar) scaleBarSize, scaleBarSpace = scaleBarSpace)
+                ppp = subset.ppp(ppp, cell == namIn),
+                Shift = shiftVec(counter, Ceils[1]),
+                nuclei = if (plotNuclei) obj[[nam, "nuclei"]][namIn],
+                scaleBarSize = if (addScaleBar) scaleBarSize, scaleBarSpace = scaleBarSpace
+            )
             plot.owin(shifted$owin, add = TRUE, border = borderCols[[i]][[j]])
-            if(plotNuclei){
-              for(nn in shifted$nuclei){
-                plot.owin(nn, add = TRUE, border = nucCol)
-              }
+            if (plotNuclei) {
+                for (nn in shifted$nuclei) {
+                    plot.owin(nn, add = TRUE, border = nucCol)
+                }
             }
-            points(coords(shifted$ppp),col = Cols[marks(shifted$ppp, drop = FALSE)$gene],
-                pch = ".", cex = Cex)
-            if(addScaleBar){
-                rect(shifted$scaleBar$xrange[1], shifted$scaleBar$yrange[1], 
-                     shifted$scaleBar$xrange[2], shifted$scaleBar$yrange[2], col = "black")
+            points(coords(shifted$ppp),
+                col = Cols[marks(shifted$ppp, drop = FALSE)$gene],
+                pch = ".", cex = Cex
+            )
+            if (addScaleBar) {
+                rect(shifted$scaleBar$xrange[1], shifted$scaleBar$yrange[1],
+                    shifted$scaleBar$xrange[2], shifted$scaleBar$yrange[2],
+                    col = "black"
+                )
             }
             counter <- counter + 1
         }
@@ -156,29 +163,35 @@ plotCells <- function(obj, features = getFeatures(obj)[seq_len(3)], nCells = 100
         )
     }
     if (warnPosition) {
-        text(Ceils[1]/2, -0.12, cex = 0.75, 
-             labels = "Cells not in original location but sorted by expression!")
+        text(Ceils[1] / 2, -0.12,
+            cex = 0.75,
+            labels = "Cells not in original location but sorted by expression!"
+        )
     }
     invisible()
 }
 #' @importFrom spatstat.geom affine.owin affine.ppp
 toUnitSquare <- function(win, ppp, Shift, nuclei, scaleBarSize, scaleBarSpace) {
     shrink <- 1 / rep(Max <- max(diff(win$xrange), diff(win$yrange)), 2)
-    if(sb <- !is.null(scaleBarSize)){ 
-      #Make additional space for the scale bar by shrinking x a bit more, and shifting everything right
-      Shift[1] <- Shift[1] + (sbShift <- (scaleBarSpace/2*scaleBarSize[1]/Max))
-      shrink[1] <- shrink[1]*(Max/(Max+scaleBarSpace*scaleBarSize[1]))
-      scaleBar <- owin(xrange = c(win$xrange[1], win$xrange[1] + scaleBarSize[1]), 
-           yrange = c(win$yrange[1], win$yrange[1] + scaleBarSize[2]))
+    if (sb <- !is.null(scaleBarSize)) {
+        # Make additional space for the scale bar by shrinking x a bit more, and shifting everything right
+        Shift[1] <- Shift[1] + (sbShift <- (scaleBarSpace / 2 * scaleBarSize[1] / Max))
+        shrink[1] <- shrink[1] * (Max / (Max + scaleBarSpace * scaleBarSize[1]))
+        scaleBar <- owin(
+            xrange = c(win$xrange[1], win$xrange[1] + scaleBarSize[1]),
+            yrange = c(win$yrange[1], win$yrange[1] + scaleBarSize[2])
+        )
     }
     vec <- -c(win$xrange[1], win$yrange[1]) * shrink + Shift
     ds <- diag(shrink)
-    list(owin = affine.owin(win, ds, vec),
-         ppp = affine.ppp(ppp, ds,vec),
-         nuclei = if(any(idNuc <- !vapply(nuclei, FUN.VALUE = TRUE, is.null))){
-           lapply(nuclei[idNuc], affine.owin, ds, vec)
-         },
-         scaleBar = if(sb) affine.owin(scaleBar,ds, vec - c(sbShift, 0)))
+    list(
+        owin = affine.owin(win, ds, vec),
+        ppp = affine.ppp(ppp, ds, vec),
+        nuclei = if (any(idNuc <- !vapply(nuclei, FUN.VALUE = TRUE, is.null))) {
+            lapply(nuclei[idNuc], affine.owin, ds, vec)
+        },
+        scaleBar = if (sb) affine.owin(scaleBar, ds, vec - c(sbShift, 0))
+    )
 }
 shiftVec <- function(counter, Ceil) {
     c(counter %% Ceil, counter %/% Ceil)

@@ -1,6 +1,6 @@
 #' Estimate probabilistic indices and add a variance weighting function.
 #' @description Estimate different probabilistic indices for localization
-#' on all point patterns of a hyperframe, and integrate the results in the same hyperframe. 
+#' on all point patterns of a hyperframe, and integrate the results in the same hyperframe.
 #' estPisSingle() is the workhorse function for a single point pattern.
 #' @export
 #' @param hypFrame A hyperframe
@@ -27,13 +27,17 @@
 #'     coordVars = c("x", "y"),
 #'     imageVars = c("day", "root", "section")
 #' )
-#' yangPims <- estPis(hypYang[c(seq_len(4), seq(27, 29)), ], pis = "nn",
-#'     nPointsAll = 4e2)
+#' yangPims <- estPis(hypYang[c(seq_len(4), seq(27, 29)), ],
+#'     pis = "nn",
+#'     nPointsAll = 4e2
+#' )
 #' # Univariate nearest neighbour distances
-#' yangObj <- addWeightFunction(yangPims, designVars = c("day", "root")) 
-#' # Add the weight functions 
-#' yangObj <- addWeightFunction(yangPims, lowestLevelVar = "section", 
-#' pi = "nn")
+#' yangObj <- addWeightFunction(yangPims, designVars = c("day", "root"))
+#' # Add the weight functions
+#' yangObj <- addWeightFunction(yangPims,
+#'     lowestLevelVar = "section",
+#'     pi = "nn"
+#' )
 #' # Alternative formulation with 'lowestLevelVar'
 #' @details
 #' The null distribution used to calculate the PIs can be either 'background' or 'null'.
@@ -55,14 +59,19 @@
 #' @references
 #' \insertAllCited{}
 estPis <- function(
-    hypFrame, pis = c("nn", "nnPair", "edge", "centroid", "nnCell",
-        "nnPairCell"), verbose = TRUE, null = c("background", "CSR"),
-    nPointsAll = switch(null,
-        background = 5e4, CSR = 2e3
-    ), nPointsAllWithinCell = switch(null,
-        background = 5e3, CSR = 1e3
-    ), nPointsAllWin = 1e4, minDiff = 20, minObsNN = 1L,
-    features = getFeatures(hypFrame), ...) {
+      hypFrame, pis = c(
+          "nn", "nnPair", "edge", "centroid", "nnCell",
+          "nnPairCell"
+      ), verbose = TRUE, null = c("background", "CSR"),
+      nPointsAll = switch(null,
+          background = 5e4,
+          CSR = 2e3
+      ), nPointsAllWithinCell = switch(null,
+          background = 5e3,
+          CSR = 1e3
+      ), nPointsAllWin = 1e4, minDiff = 20, minObsNN = 1L,
+      features = getFeatures(hypFrame), ...
+) {
     pis <- match.arg(pis, several.ok = TRUE)
     null <- match.arg(null)
     stopifnot(
@@ -119,11 +128,12 @@ estPis <- function(
 #' @rdname estPis
 #' @order 2
 estPisSingle <- function(
-    p, pis, null, tabObs, owins = NULL, centroids = NULL, window = p$window,
-    loopFun = "bplapply", features, nPointsAll, nPointsAllWithinCell, nPointsAllWin,
-    minDiff, minObsNN) {
+      p, pis, null, tabObs, owins = NULL, centroids = NULL, window = p$window,
+      loopFun = "bplapply", features, nPointsAll, nPointsAllWithinCell, nPointsAllWin,
+      minDiff, minObsNN
+) {
     features <- intersect(features, names(tabObs))
-    if(!length(features)){
+    if (!length(features)) {
         return(list(pointDists = NULL, windowDists = NULL, withinCellDists = NULL))
     }
     # Scramble to ensure equal calculation times in multithreading
@@ -162,10 +172,11 @@ estPisSingle <- function(
         nnPairPis <- vapply(seq_len(ncol(genePairsMat)), FUN.VALUE = double(1), function(i) {
             feat1 <- genePairsMat[1, i]
             feat2 <- genePairsMat[2, i]
-            mean(c(getElement(piList[[feat1]]$pointDists$nnPair, feat2), 
-                   getElement(piList[[feat2]]$pointDists$nnPair,feat1))
-                 )
-            #Each point gets the same weight, variance weighting is implemented downstream
+            mean(c(
+                getElement(piList[[feat1]]$pointDists$nnPair, feat2),
+                getElement(piList[[feat2]]$pointDists$nnPair, feat1)
+            ))
+            # Each point gets the same weight, variance weighting is implemented downstream
         })
         names(nnPairPis) <- apply(genePairsMat, 2, paste, collapse = "--")
     } else {

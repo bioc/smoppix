@@ -1,5 +1,5 @@
 #' Extract design variables from a hyperframe
-#' 
+#'
 #' Returns all design variables, both at the level of the point pattern and the
 #' level of the event
 #'
@@ -17,9 +17,9 @@ getDesignVars <- function(x) {
 #' @param exclude variables to exclude
 #' @rdname getDesignVars
 getPPPvars <- function(x, exclude = c(
-                           "tabObs", "centroids", "owins", "ppp", "pimRes",
-                           "image", "nuclei"
-                       )) {
+        "tabObs", "centroids", "owins", "ppp", "pimRes",
+        "image", "nuclei"
+    )) {
     setdiff(names(getHypFrame(x)), exclude)
 }
 #' getEventVars() extracts variables related to events, e.g. the cell (the marks)
@@ -29,7 +29,7 @@ getEventVars <- function(x, exclude = c("x", "y", "z")) {
         names(marks(ppp, drop = FALSE))
     }))), exclude)
 }
-getDiscreteVars <- function(x){
+getDiscreteVars <- function(x) {
     eventVars <- unique(unlist(lapply(getHypFrame(x)$ppp, function(ppp) {
         names(marks(ppp, drop = FALSE))[!vapply(marks(ppp, drop = FALSE), FUN.VALUE = TRUE, is.numeric)]
     })))

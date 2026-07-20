@@ -13,7 +13,7 @@
 #' within the groups of PIs defined by this variable.
 #' @param minNumVar The minimum number of observations needed to calculate a
 #' variance. Groups with fewer replicates are ignored.
-#' @details Provide either 'designVars' or 'lowestLevelVar'. The 'designVars' are 
+#' @details Provide either 'designVars' or 'lowestLevelVar'. The 'designVars' are
 #' usually the same as the regressors in the linear model. In case 'lowestLevelVar' is provided, the
 #' design variables are set to all imageVars in the hypFrame object except
 #' lowestLevelVar. When the PI is calculated on the cell level ("nnCell" or "nnPairCell"),
@@ -32,8 +32,10 @@
 #' @seealso \link{buildDataFrame}, \link{estPis}
 #' @rdname estPis
 #' @order 3
-addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLevelVar,
-    maxObs = 1e+05, maxFeatures = 1000, minNumVar = 3, ...) {
+addWeightFunction <- function(
+      resList, pis = resList$pis, designVars, lowestLevelVar,
+      maxObs = 1e+05, maxFeatures = 1000, minNumVar = 3, ...
+) {
     if (is.null(resList$pis)) {
         stop("No pims found in the hyperframe.", " First estimate them using the estPis() function.")
     }
@@ -49,7 +51,7 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
     }
     pis <- match.arg(pis, choices = c("nn", "nnPair", "nnCell", "nnPairCell"), several.ok = TRUE)
     isNested <- !(missing(designVars) && missing(lowestLevelVar)) # Is there a nested structure in the design
-    allCell <- all(grepl("Cell", pis))
+    allCell <- all(grepl("Cell", pis, fixed = TRUE))
     if (isNested) {
         designVars <- constructDesignVars(designVars, lowestLevelVar, allCell, resList = resList)
     } else {
@@ -58,9 +60,9 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
         designVars <- NULL
     }
     Wfs <- lapply(pis, function(pi) {
-        cellId <- grepl("Cell", pi)
+        cellId <- grepl("Cell", pi, fixed = TRUE)
         features <- getEstFeatures(resList)
-        if (pairId <- grepl("Pair", pi)) {
+        if (pairId <- grepl("Pair", pi, fixed = TRUE)) {
             features <- makePairs(features)
         }
         if (length(features) > maxFeatures) {
@@ -70,15 +72,17 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
             ordDesign <- seq_len(nrow(resList$hypFrame))
         } else {
             designVec <- apply(as.data.frame(resList$hypFrame[, designVars, drop = FALSE]),
-                1, paste, collapse = "_")
+                1, paste,
+                collapse = "_"
+            )
             ordDesign <- order(designVec) # Ensure correct ordering for tapply
         }
-        if(cellId){
-          #Prepare tables
-          prepTabsWf <- lapply(ordDesign, function(x) {
-            tab <- table(marks(resList$hypFrame$ppp[[x]])[, c("cell", "gene")])
-            tab[setdiff(rownames(tab), "NA"), ]
-          })
+        if (cellId) {
+            # Prepare tables
+            prepTabsWf <- lapply(ordDesign, function(x) {
+                tab <- table(marks(resList$hypFrame$ppp[[x]])[, c("cell", "gene")])
+                tab[setdiff(rownames(tab), "NA"), ]
+            })
         }
         varEls <- lapply(features, function(gene) {
             geneSplit <- if (pairId) {
@@ -87,31 +91,31 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
                 gene
             }
             if (cellId) {
-                piSub <- sub("Cell", "", pi)
+                piSub <- sub("Cell", "", pi, fixed = TRUE)
                 piList <- lapply(resList$hypFrame$pimRes, function(x) {
                     lapply(x[["withinCellDists"]], function(y) {
                         getGp(y[[piSub]], gene)
                     })
                 })
-             # If cellId, there is no tapply, cells are the lowest level anyway
+                # If cellId, there is no tapply, cells are the lowest level anyway
                 tmp <- lapply(ordDesign, function(x) {
                     tab <- prepTabsWf[[x]]
                     out <- if (all(geneSplit %in% colnames(tab))) {
-                      lenOut <- sum(id <- apply((CellGene <- tab[, geneSplit, drop = FALSE]) >
-                          (1 - pairId), 1, all))
-                      if (lenOut) {
-                          xx <- unlist(piList[[x]])
-                          deps <- if (sum(!is.na(xx)) >= minNumVar) {
-                              (xx - mean(xx, na.rm = TRUE))^2
-                          } else {
-                              rep_len(NA, lenOut)
-                          }
-                          cbind(quadDeps = matrix(deps, nrow = lenOut), if (pairId) {
-                              t(apply(CellGene[id, , drop = FALSE], 1, sort))
-                          } else {
-                              CellGene[id, , drop = FALSE]
-                          })
-                      }
+                        lenOut <- sum(id <- apply((CellGene <- tab[, geneSplit, drop = FALSE]) >
+                            (1 - pairId), 1, all))
+                        if (lenOut) {
+                            xx <- unlist(piList[[x]])
+                            deps <- if (sum(!is.na(xx)) >= minNumVar) {
+                                (xx - mean(xx, na.rm = TRUE))^2
+                            } else {
+                                rep_len(NA, lenOut)
+                            }
+                            cbind(quadDeps = matrix(deps, nrow = lenOut), if (pairId) {
+                                t(apply(CellGene[id, , drop = FALSE], 1, sort))
+                            } else {
+                                CellGene[id, , drop = FALSE]
+                            })
+                        }
                     }
                     return(out)
                 })
@@ -126,7 +130,8 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
                     FUN.VALUE = double(1),
                     function(x) {
                         getGp(x[["pointDists"]][[pi]], gene, notFoundReturn = NA)
-                    })
+                    }
+                )
                 quadDeps <- unlist(tapply(piList, designVec, function(x) {
                     if (sum(!is.na(x)) >= minNumVar) {
                         (x - mean(x, na.rm = TRUE))^2
@@ -134,14 +139,15 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
                         rep_len(NA, length(x))
                     }
                 })) # The quadratic departures from the conditional mean
-                tabEntries <- vapply(resList$hypFrame$tabObs[ordDesign], 
-                                     FUN.VALUE = double(1+pairId), function(x) {
-                    if (all(geneSplit %in% names(x))) {
-                        sort(x[geneSplit]) # Number of NN distances
-                    } else {
-                        rep(NA, 1+pairId)
+                tabEntries <- vapply(resList$hypFrame$tabObs[ordDesign],
+                    FUN.VALUE = double(1 + pairId), function(x) {
+                        if (all(geneSplit %in% names(x))) {
+                            sort(x[geneSplit]) # Number of NN distances
+                        } else {
+                            rep(NA, 1 + pairId)
+                        }
                     }
-                })
+                )
                 out <- rbind(quadDeps = quadDeps, tabEntries)
             }
             rownames(out)[-1] <- if (pairId) {
@@ -151,15 +157,17 @@ addWeightFunction <- function(resList, pis = resList$pis, designVars, lowestLeve
             }
             out
         })
-        varElMat <- matrix(unlist(varEls), ncol = 2+pairId, byrow = TRUE, 
-                           dimnames = list(NULL, c("quadDeps", if (pairId) {
-            c("minP", "maxP")
-        } else {
-            "NP"
-        })))
+        varElMat <- matrix(unlist(varEls),
+            ncol = 2 + pairId, byrow = TRUE,
+            dimnames = list(NULL, c("quadDeps", if (pairId) {
+                c("minP", "maxP")
+            } else {
+                "NP"
+            }))
+        )
         # Build matrix with variance entries and number of events
         varElMat <- varElMat[!is.na(varElMat[, "quadDeps"]) &
-                                 varElMat[, "quadDeps"] != 0, ]
+            varElMat[, "quadDeps"] != 0, ]
         if (nrow(varElMat) > maxObs) {
             varElMat <- varElMat[sample(nrow(varElMat), maxObs), ]
         }

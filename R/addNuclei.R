@@ -15,7 +15,7 @@
 #' @importFrom spatstat.geom is.subset.owin
 #' @export
 #' @seealso \link{addCell}, \link{convertToOwins}
-#' @details The nuclei names must match the cell names already present, all other nuclei are dropped. 
+#' @details The nuclei names must match the cell names already present, all other nuclei are dropped.
 #' A warning is issued when nuclei are not encompassed by their cell.
 #' @examples
 #' library(spatstat.random)
@@ -66,38 +66,38 @@
 #' names(nList) <- rownames(hypFrame) # Matching names is necessary
 #' hypFrame3 <- addNuclei(hypFrame2, nList)
 addNuclei <- function(hypFrame, nucleiList, checkSubset = TRUE,
-                    verbose = TRUE, coords = c("x", "y"), overwriteNuclei = FALSE, ...) {
+    verbose = TRUE, coords = c("x", "y"), overwriteNuclei = FALSE, ...) {
     stopifnot(
         nrow(hypFrame) == length(nucleiList),
         all(rownames(hypFrame) %in% names(nucleiList)),
         is.hyperframe(hypFrame),
         is.list(nucleiList)
     )
-    if(!is.null(hypFrame$nuclei) && !overwriteNuclei){
-      stop("Nuclei already present in hyperframe!
+    if (!is.null(hypFrame$nuclei) && !overwriteNuclei) {
+        stop("Nuclei already present in hyperframe!
              Set overwriteNuclei=TRUE to replcae them")
     }
     if (verbose) {
         message("Converting nuclei to spatstat owins")
     }
     # Convert different types of windows to owins
-    nucleiList <- loadBalanceBplapply(Nam <- names(nucleiList), function(nam){
-            convertToOwins(nucleiList[[nam]], coords = coords, namePPP = nam, ...)
-        })
+    nucleiList <- loadBalanceBplapply(Nam <- names(nucleiList), function(nam) {
+        convertToOwins(nucleiList[[nam]], coords = coords, namePPP = nam, ...)
+    })
     names(nucleiList) <- Nam
     hypFrame$nuclei <- nucleiList[rownames(hypFrame)]
-    if(checkSubset){
-      if(is.null(hypFrame$owins)){
-        stop("No cells present in hyperframe so I cannot check if nuclei are encompassed by them!")
-      }
-      noSubSet <- lapply(rownames(hypFrame), function(i){
-        which(!vapply(names(hypFrame$nuclei[[i]]), FUN.VALUE = logical(1), function(x){
-          is.subset.owin(hypFrame$nuclei[[i]][[x]], hypFrame$owins[[i]][[x]])
-        }))
-      })
-      if(any(vapply(noSubSet, FUN.VALUE = integer(1), length) > 0)){
-        warning("Not all nuclei are completely contained in their cells")
-      }
+    if (checkSubset) {
+        if (is.null(hypFrame$owins)) {
+            stop("No cells present in hyperframe so I cannot check if nuclei are encompassed by them!")
+        }
+        noSubSet <- lapply(rownames(hypFrame), function(i) {
+            which(!vapply(names(hypFrame$nuclei[[i]]), FUN.VALUE = logical(1), function(x) {
+                is.subset.owin(hypFrame$nuclei[[i]][[x]], hypFrame$owins[[i]][[x]])
+            }))
+        })
+        if (any(vapply(noSubSet, FUN.VALUE = integer(1), length) > 0)) {
+            warning("Not all nuclei are completely contained in their cells")
+        }
     }
     return(hypFrame)
 }

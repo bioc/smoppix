@@ -1,5 +1,5 @@
 #' Extract linear mixed model results
-#' 
+#'
 #' @description getResults() extracts effect size estimates, standard errors and adjusted p-values for a certain parameter
 #' from a linear model.
 #'
@@ -24,10 +24,10 @@ getResults <- function(obj, pi, parameter) {
     } else {
         obj[[pi]][["results"]]$fixedEffects
     }
-    if (!(parameter %in% names(Obj))) {
+    if (parameter %in% names(Obj)) {
+        Obj[[parameter]]
+    } else {
         stop("Parameter ", parameter, " not estimated in linear model!
              Rerun fitLMMs with the correct variables or formula supplied.")
-    } else {
-        Obj[[parameter]]
     }
 }

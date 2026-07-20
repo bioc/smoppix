@@ -20,13 +20,16 @@
 #' dfUniNN <- buildDataFrame(yangObj, gene = "SmVND2", pi = "nn")
 #' # Example analysis with linear mixed model
 #' library(lmerTest)
-#' mixedMod <- lmer(pi - 0.5 ~ day + (1 | root), weight = weight, data = dfUniNN,
+#' mixedMod <- lmer(pi - 0.5 ~ day + (1 | root),
+#'     weight = weight, data = dfUniNN,
 #'     contrasts = list("day" = "contr.sum")
 #' )
 #' summary(mixedMod)
 #' # Evidence for aggregation
-buildDataFrame <- function(obj, gene, pi = c("nn", "nnPair", "edge", "centroid",
-                               "nnCell", "nnPairCell"), piMat, pppDf, prepMat, prepTab, prepCells) {
+buildDataFrame <- function(obj, gene, pi = c(
+        "nn", "nnPair", "edge", "centroid",
+        "nnCell", "nnPairCell"
+    ), piMat, pppDf, prepMat, prepTab, prepCells) {
     pi <- match.arg(pi)
     if (missing(pppDf)) {
         pppDf <- as.data.frame(obj$hypFrame[, c("image", getPPPvars(obj)), drop = FALSE])
@@ -38,17 +41,17 @@ buildDataFrame <- function(obj, gene, pi = c("nn", "nnPair", "edge", "centroid",
             stop("No weight function added yet, run addWeightFunction first!")
         }
         # Establish whether pi and gene match, and call separate functions
-        if (cellId <- grepl("Cell", pi)) {
-            piSub <- sub("Cell", "", pi)
+        if (cellId <- grepl("Cell", pi, fixed = TRUE)) {
+            piSub <- sub("Cell", "", pi, fixed = TRUE)
         }
-        if (pairId <- grepl("Pair", pi)) {
+        if (pairId <- grepl("Pair", pi, fixed = TRUE)) {
             if (lg == 2) {
                 gene <- paste(gene, collapse = "--")
-            } else if (!grepl("--", gene)) {
+            } else if (!grepl("--", gene, fixed = TRUE)) {
                 stop("Provide gene pair as character vector of length 2", " or separated by '--'.")
             }
         } else {
-            if (lg != 1 || grepl("--", gene)) {
+            if (lg != 1 || grepl("--", gene, fixed = TRUE)) {
                 stop("Provide a single gene for univariate PIs!")
             }
         }
@@ -85,122 +88,139 @@ buildDataFrame <- function(obj, gene, pi = c("nn", "nnPair", "edge", "centroid",
                 }
                 return(dfWin)
             } else if (cellId) {
-              if(misPrep){
-                piEst <- vapply(nList$pimRes[[piListNameInner]], FUN.VALUE = double(1), function(y) {
-                  getGp(y[[piSub]], gene, notFoundReturn = NA)
-                })
-                cellCovars <- Marks[match(names(piEst), Marks$cell), setdiff(
-                  eventVars, "gene"), drop = FALSE]
-                tabCell <- table(Marks[, c("cell", "gene")])
-                tabCell <- tabCell[rownames(tabCell)!= "NA",]
-              } else {
-                piEst <- getGp(t(prepMat[names(nList$pimRes[[piListNameInner]]),, drop = FALSE]), 
-                               gene, notFoundReturn = NA)
-                cellCovars <-prepCells[[n]][match(names(piEst), prepCells[[n]]$cell), setdiff(
-                  colnames(prepCells[[n]]), "gene"), drop = FALSE]
-                tabCell <- prepTab[[n]][match(geneSplit, rownames( prepTab[[n]])),, drop = FALSE]
-              }
+                if (misPrep) {
+                    piEst <- vapply(nList$pimRes[[piListNameInner]], FUN.VALUE = double(1), function(y) {
+                        getGp(y[[piSub]], gene, notFoundReturn = NA)
+                    })
+                    cellCovars <- Marks[match(names(piEst), Marks$cell), setdiff(
+                        eventVars, "gene"
+                    ), drop = FALSE]
+                    tabCell <- table(Marks[, c("cell", "gene")])
+                    tabCell <- tabCell[rownames(tabCell) != "NA", ]
+                } else {
+                    piEst <- getGp(t(prepMat[names(nList$pimRes[[piListNameInner]]), , drop = FALSE]),
+                        gene,
+                        notFoundReturn = NA
+                    )
+                    cellCovars <- prepCells[[n]][match(names(piEst), prepCells[[n]]$cell), setdiff(
+                        colnames(prepCells[[n]]), "gene"
+                    ), drop = FALSE]
+                    tabCell <- prepTab[[n]][match(geneSplit, rownames(prepTab[[n]])), , drop = FALSE]
+                }
                 npVec <- vapply(geneSplit, FUN.VALUE = integer(nrow(tabCell)), function(x) {
-                  getGp(tabCell, x, notFoundReturn = NA)
+                    getGp(tabCell, x, notFoundReturn = NA)
                 })
                 if (pairId) {
-                  npVec <- t(apply(npVec, 1, sort))
+                    npVec <- t(apply(npVec, 1, sort))
                 }
                 colnames(npVec) <- if (pairId) {
                     c("minP", "maxP")
                 } else {
                     "NP"
                 }
-                npVecOut <- matrix(0, ncol = length(geneSplit), nrow = length(piEst), 
-                                   dimnames = list(names(piEst), colnames(npVec)))
-                npVecOut[rownames(npVec),] <- npVec
+                npVecOut <- matrix(0,
+                    ncol = length(geneSplit), nrow = length(piEst),
+                    dimnames = list(names(piEst), colnames(npVec))
+                )
+                npVecOut[rownames(npVec), ] <- npVec
                 data.frame(pi = piEst, cellCovars, npVecOut, check.rows = FALSE, check.names = FALSE)
             } else {
-              piEst <- getGp(if(misPrep){nList$pimRes[[piListNameInner]][[pi]]} else {prepMat[n, ]},
-                             gene, notFoundReturn = NA)
-              npVec <- vapply(geneSplit, FUN.VALUE = integer(1), function(x) {
-                getGp(nList$tabObs, x, notFoundReturn = NA)
-              })
-              if (pairId) {
-                  cbind(pi = piEst, minP = min(npVec), maxP = max(npVec))
-              } else {
-                  cbind(pi = piEst, NP = npVec)
-              }
+                piEst <- getGp(
+                    if (misPrep) {
+                        nList$pimRes[[piListNameInner]][[pi]]
+                    } else {
+                        prepMat[n, ]
+                    },
+                    gene,
+                    notFoundReturn = NA
+                )
+                npVec <- vapply(geneSplit, FUN.VALUE = integer(1), function(x) {
+                    getGp(nList$tabObs, x, notFoundReturn = NA)
+                })
+                if (pairId) {
+                    cbind(pi = piEst, minP = min(npVec), maxP = max(npVec))
+                } else {
+                    cbind(pi = piEst, NP = npVec)
+                }
             }
         })
         piMat <- if (!all((Times <- vapply(piDfs, FUN.VALUE = integer(1), NROW)) == 0)) {
-          image <- rep(rownames(obj$hypFrame), times = Times)
-          piDfsMat <- Reduce(piDfs, f = rbind)
-          piMat <- data.frame(piDfsMat, pppDf[image, ,drop = FALSE], check.rows = FALSE, check.names = FALSE)
-          if (!windowId) {
-              # Add weights
-              weight <- evalWeightFunction(obj$Wfs[[pi]], newdata = piMat[, if (pairId) {
-                  c("minP", "maxP")
-              } else {
-                  "NP"
-              }, drop = FALSE])
-              weight <- weight / sum(weight, na.rm = TRUE)
-              piMat <- cbind(piMat, weight = weight)
-          }
-          rownames(piMat) <- NULL
-          piMat
+            image <- rep(rownames(obj$hypFrame), times = Times)
+            piDfsMat <- Reduce(piDfs, f = rbind)
+            piMat <- data.frame(piDfsMat, pppDf[image, , drop = FALSE], check.rows = FALSE, check.names = FALSE)
+            if (!windowId) {
+                # Add weights
+                weight <- evalWeightFunction(obj$Wfs[[pi]], newdata = piMat[, if (pairId) {
+                    c("minP", "maxP")
+                } else {
+                    "NP"
+                }, drop = FALSE])
+                weight <- weight / sum(weight, na.rm = TRUE)
+                piMat <- cbind(piMat, weight = weight)
+            }
+            rownames(piMat) <- NULL
+            piMat
         }
-      }
+    }
     return(piMat)
 }
-prepareMatrixOrList <- function(obj, pi, features){
-  if(windowId <- (pi %in% c("edge", "centroid"))){
-    stop("prepareMatrix() not implemented yet for pi ", pi, " !")
-  } else if (is.null(obj$Wfs[[pi]])) {
-    stop("No weight function added yet, run addWeightFunction first!")
-  }
-  # Establish whether pi and gene match, and call separate functions
-  if (cellId <- grepl("Cell", pi)) {
-    piSub <- sub("Cell", "", pi)
-  }
-  piListNameInner <- if (cellId) {
-    "withinCellDists"
-  } else {
-    "pointDists"
-  }
-  if(missing(features)){
-    features <- if(windowId){
-      unique(unlist(lapply(obj$hypFrame$pimRes, function(x) names(x[[piListNameInner]]))))
-    } else if(cellId){
-      unique(unlist(lapply(obj$hypFrame$pimRes, function(x) lapply(x[[piListNameInner]], function(y) names(y[[piSub]])))))
+prepareMatrixOrList <- function(obj, pi, features) {
+    if (windowId <- (pi %in% c("edge", "centroid"))) {
+        stop("prepareMatrix() not implemented yet for pi ", pi, " !")
+    } else if (is.null(obj$Wfs[[pi]])) {
+        stop("No weight function added yet, run addWeightFunction first!")
+    }
+    # Establish whether pi and gene match, and call separate functions
+    if (cellId <- grepl("Cell", pi)) {
+        piSub <- sub("Cell", "", pi)
+    }
+    piListNameInner <- if (cellId) {
+        "withinCellDists"
     } else {
-      unique(unlist(lapply(obj$hypFrame$pimRes, function(x){
-        names(x[[piListNameInner]][[pi]])
-      })))
+        "pointDists"
     }
-  }
-  if(grepl("Pair", pi)){
-    features <- sortGp(features)
-  }
-  if(cellId){
-    samples <- unique(unlist(lapply(obj$hypFrame$pimRes, function(x) names(x[[piListNameInner]]))))
-    out <- lapply(selfName(rownames(obj$hypFrame)), function(sam){
-      samVec <- names(piObj <- obj$hypFrame$pimRes[[sam]][[piListNameInner]])
-      outIn <- matrix(NA, nrow = length(samVec), ncol = length(features),
-                      dimnames = list(samVec, features))
-      for(samIn in samVec){
-        featVec <- piObj[[samIn]][[piSub]]
-        nams <- features[features %in% names(featVec)]
-        outIn[samIn, nams] <- featVec[nams]
-      }
-      return(outIn)
-    })
-  } else {
-    samples <- rownames(obj$hypFrame)
-    out <- matrix(NA, nrow = length(samples), ncol = length(features),
-                     dimnames = list(samples, features))
-    for(sam in samples){
-      featVec <- obj$hypFrame[[sam, "pimRes"]][[piListNameInner]][[pi]]
-      nams <- features[features %in% names(featVec)]
-      out[sam, nams] <- featVec[nams]
+    if (missing(features)) {
+        features <- if (windowId) {
+            unique(unlist(lapply(obj$hypFrame$pimRes, function(x) names(x[[piListNameInner]]))))
+        } else if (cellId) {
+            unique(unlist(lapply(obj$hypFrame$pimRes, function(x) lapply(x[[piListNameInner]], function(y) names(y[[piSub]])))))
+        } else {
+            unique(unlist(lapply(obj$hypFrame$pimRes, function(x) {
+                names(x[[piListNameInner]][[pi]])
+            })))
+        }
     }
-  }
-  return(out)
+    if (grepl("Pair", pi)) {
+        features <- sortGp(features)
+    }
+    if (cellId) {
+        samples <- unique(unlist(lapply(obj$hypFrame$pimRes, function(x) names(x[[piListNameInner]]))))
+        out <- lapply(selfName(rownames(obj$hypFrame)), function(sam) {
+            samVec <- names(piObj <- obj$hypFrame$pimRes[[sam]][[piListNameInner]])
+            outIn <- matrix(NA,
+                nrow = length(samVec), ncol = length(features),
+                dimnames = list(samVec, features)
+            )
+            for (samIn in samVec) {
+                featVec <- piObj[[samIn]][[piSub]]
+                nams <- features[features %in% names(featVec)]
+                outIn[samIn, nams] <- featVec[nams]
+            }
+            return(outIn)
+        })
+    } else {
+        samples <- rownames(obj$hypFrame)
+        out <- matrix(NA,
+            nrow = length(samples), ncol = length(features),
+            dimnames = list(samples, features)
+        )
+        for (sam in samples) {
+            featVec <- obj$hypFrame[[sam, "pimRes"]][[piListNameInner]][[pi]]
+            nams <- features[features %in% names(featVec)]
+            out[sam, nams] <- featVec[nams]
+        }
+    }
+    return(out)
 }
 #' Build a matrix with pi and weights
 #'
@@ -213,26 +233,35 @@ getPiAndWeights <- function(obj, gene, pi, piMat, prepMat, prepTab) {
     geneSplit <- sund(gene)
     cellId <- grepl("Cell", pi)
     pairId <- grepl("Pair", pi)
-    piListNameInner <- if (cellId) {"withinCellDists"} else {"pointDists"}
-    piMat <- Reduce(f = rbind, lapply(seq_len(nrow(obj$hypFrame)), function(n){
-      npVec <- if(cellId){
-        piEst <- prepMat[[n]][, gene]
-        prepTab[[n]][names(piEst), geneSplit, drop = FALSE]
-      } else {
-        piEst <- prepMat[n, gene]
-        prepTab[n, geneSplit, drop = FALSE]
-      }
-      cbind(pi = piEst, npVec)
-    }))
-    if(pairId){
-      piMat[, 2:3] <- rowSort(piMat[, 2:3])
-      colnames(piMat)[2:3] <- c("minP", "maxP")
+    piListNameInner <- if (cellId) {
+        "withinCellDists"
     } else {
-      colnames(piMat)[2] <- "NP"
+        "pointDists"
     }
-    weight <- evalWeightFunction(obj$Wfs[[pi]], 
-                newdata = piMat[, if (pairId) {c("minP", "maxP")} else {"NP"}, drop = FALSE])
-    piMat <- cbind(piMat[, "pi", drop = FALSE], "weights" = weight/sum(weight, na.rm = TRUE))
+    piMat <- Reduce(f = rbind, lapply(seq_len(nrow(obj$hypFrame)), function(n) {
+        npVec <- if (cellId) {
+            piEst <- prepMat[[n]][, gene]
+            prepTab[[n]][names(piEst), geneSplit, drop = FALSE]
+        } else {
+            piEst <- prepMat[n, gene]
+            prepTab[n, geneSplit, drop = FALSE]
+        }
+        cbind(pi = piEst, npVec)
+    }))
+    if (pairId) {
+        piMat[, 2:3] <- rowSort(piMat[, 2:3])
+        colnames(piMat)[2:3] <- c("minP", "maxP")
+    } else {
+        colnames(piMat)[2] <- "NP"
+    }
+    weight <- evalWeightFunction(obj$Wfs[[pi]],
+        newdata = piMat[, if (pairId) {
+            c("minP", "maxP")
+        } else {
+            "NP"
+        }, drop = FALSE]
+    )
+    piMat <- cbind(piMat[, "pi", drop = FALSE], "weights" = weight / sum(weight, na.rm = TRUE))
     rownames(piMat) <- NULL
     return(piMat)
 }

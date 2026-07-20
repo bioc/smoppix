@@ -18,7 +18,7 @@ sund <- function(x, sep = "--") {
 #'
 #' @return a vector of design levels
 makeDesignVar <- function(x, designVars, sep = "_") {
-    if(NCOL(x)==1){
+    if (NCOL(x) == 1) {
         unlist(x)
     } else {
         apply(x[, designVars, drop = FALSE], 1, paste, collapse = sep)
@@ -45,7 +45,7 @@ makePairs <- function(genes) {
 #' @return A point pattern, subsampled if necessary
 subSampleP <- function(p, nSims, returnId = FALSE) {
     Pout <- if (tooBig <- (NP <- npoints(p)) > nSims) {
-        p[id <- sample(NP, nSims), ,drop = FALSE]
+        p[id <- sample(NP, nSims), , drop = FALSE]
     } else {
         p
     }
@@ -67,7 +67,7 @@ subSampleP <- function(p, nSims, returnId = FALSE) {
 #' @return The matrix of contrasts
 #' @export
 #' @examples
-#' fac = sample(c(TRUE, FALSE), 10, replace = TRUE)
+#' fac <- sample(c(TRUE, FALSE), 10, replace = TRUE)
 #' named.contr.sum(fac)
 named.contr.sum <- function(x, ...) {
     lev <- x
@@ -95,7 +95,7 @@ addTabObs <- function(hypFrame) {
 #' @param designVec The design vector
 #'
 #' @return The hyperframe with design variables added
-addDesign <- function(hypFrame, desMat, designVec){
+addDesign <- function(hypFrame, desMat, designVec) {
     # Add design variables
     id <- match(hypFrame$image, designVec)
     for (i in colnames(desMat)) {
@@ -112,10 +112,10 @@ addDesign <- function(hypFrame, desMat, designVec){
 #'
 #' @return The dataframe with adapted randomVars
 nestRandom <- function(df, randomVars, fixedVars) {
-  for (i in randomVars) {
-    df[, i] <- apply(df[, c(fixedVars, i), drop = FALSE], 1, paste, collapse = "_")
-  }
-  df
+    for (i in randomVars) {
+        df[, i] <- apply(df[, c(fixedVars, i), drop = FALSE], 1, paste, collapse = "_")
+    }
+    df
 }
 #' Extract coordinates from a point pattern or data frame
 #' @param x the point pattern, dataframe or matrix
@@ -181,13 +181,13 @@ crossdistWrapper <- function(x, y) {
 #' @return The adapted dataframe
 #' @export
 #' @examples
-#' df = data.frame(a = rnorm(10), b = sample(c(TRUE, FALSE), 10, replace = TRUE))
-#' dfCen = centerNumeric(df)
+#' df <- data.frame(a = rnorm(10), b = sample(c(TRUE, FALSE), 10, replace = TRUE))
+#' dfCen <- centerNumeric(df)
 #' mean(dfCen$a)
-centerNumeric <- function(x){
+centerNumeric <- function(x) {
     numId <- vapply(x, FUN.VALUE = TRUE, is.numeric)
-    for(i in which(numId)){
-        x[,i] <- x[,i] - mean(x[,i])
+    for (i in which(numId)) {
+        x[, i] <- x[, i] - mean(x[, i])
     }
     x
 }
@@ -196,12 +196,12 @@ centerNumeric <- function(x){
 #' @param featurePairs The feature pairs to be sorted
 #'
 #' @returns A character vector of the same length as the features, with pairs sorted
-sortGp <- function(featurePairs){
-  newFeat <- vapply(featurePairs, FUN.VALUE = character(1), FUN = function(x){
-    paste(sort(sund(x)), collapse = "--")
-  })
-  names(newFeat) <- newFeat
-  return(newFeat)
+sortGp <- function(featurePairs) {
+    newFeat <- vapply(featurePairs, FUN.VALUE = character(1), FUN = function(x) {
+        paste(sort(sund(x)), collapse = "--")
+    })
+    names(newFeat) <- newFeat
+    return(newFeat)
 }
 #' Name a character vector after itself
 #' @param x The vector to be names
@@ -209,4 +209,7 @@ sortGp <- function(featurePairs){
 #' @export
 #' @examples
 #' selfName(LETTERS[1:5])
-selfName <- function(x){names(x)<-x;x}
+selfName <- function(x) {
+    names(x) <- x
+    x
+}

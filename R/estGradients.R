@@ -1,5 +1,5 @@
 #' Estimate gradients over multiple point patterns, and test for significance
-#' @description estGradients() estimate gradients on all single-molecule point patterns of a hyperframe. 
+#' @description estGradients() estimate gradients on all single-molecule point patterns of a hyperframe.
 #' estGradientsSingle() is the workhorse function for a single point pattern.
 #' getPvaluesGradient() extracts the p-values of the fits.
 #' @export
@@ -34,21 +34,23 @@
 #' )
 #' yangGrads <- estGradients(hypYang[seq_len(2), ],
 #'     features = getFeatures(hypYang)[1],
-#'     fixedEffects = "day", randomEffects = "root")
+#'     fixedEffects = "day", randomEffects = "root"
+#' )
 #' # Gradients within cell
 #' data(Eng)
-#' hypEng <- buildHyperFrame(Eng[Eng$fov %in% c(1,2),], 
+#' hypEng <- buildHyperFrame(Eng[Eng$fov %in% c(1, 2), ],
 #'     coordVars = c("x", "y"),
 #'     imageVars = c("fov", "experiment")
-#' ) #Subset for speed
+#' ) # Subset for speed
 #' hypEng <- addCell(hypEng, EngRois[rownames(hypEng)], verbose = FALSE)
 #' # Limit number of cells and genes for computational reasons
-#' engGrads <- estGradients(hypEng[seq_len(2),],
-#'     features = feat <- getFeatures(hypEng)[1])
+#' engGrads <- estGradients(hypEng[seq_len(2), ],
+#'     features = feat <- getFeatures(hypEng)[1]
+#' )
 #' pVals <- getPvaluesGradient(engGrads, "cell")
 estGradients <- function(hypFrame, gradients = c("overall", if (!is.null(hypFrame$owins)) "cell"),
-                         fixedEffects = NULL, randomEffects = NULL,
-                         verbose = FALSE, features = getFeatures(hypFrame), silent = TRUE, loopFun = "bplapply", ...) {
+    fixedEffects = NULL, randomEffects = NULL,
+    verbose = FALSE, features = getFeatures(hypFrame), silent = TRUE, loopFun = "bplapply", ...) {
     gradients <- match.arg(gradients, several.ok = TRUE, choices = c("overall", "cell"))
     stopifnot(is.hyperframe(hypFrame), is.character(features))
     if (any(gradients == "cell") && is.null(hypFrame$owins)) {
@@ -102,7 +104,7 @@ estGradients <- function(hypFrame, gradients = c("overall", if (!is.null(hypFram
 #' @importFrom spatstat.geom unmark cbind.hyperframe
 #' @rdname estGradients
 estGradientsSingle <- function(hypFrame, gradients, fixedForm, randomForm,
-                               fixedFormSimple, effects = NULL, ...) {
+    fixedFormSimple, effects = NULL, ...) {
     # Within cell: recurse into estGradientsSingle but now per cell
     cell <- if ("cell" %in% gradients) {
         hypSub <- hyperframe("ppp" = unlist(
@@ -145,7 +147,7 @@ estGradientsSingle <- function(hypFrame, gradients, fixedForm, randomForm,
 #' @return For getPvaluesGradient(), a vector of p-values
 #' @export
 #' @rdname estGradients
-getPvaluesGradient <- function(res, gradient, method = "BH"){
+getPvaluesGradient <- function(res, gradient, method = "BH") {
     gradient <- match.arg(gradient, choices = c("cell", "overall"))
     pVals <- vapply(res, FUN.VALUE = double(1), function(x) {
         x[[gradient]]$pVal
@@ -153,4 +155,3 @@ getPvaluesGradient <- function(res, gradient, method = "BH"){
     pAdj <- p.adjust(pVals, method = method)
     return(cbind("pVal" = pVals, "pAdj" = pAdj))
 }
-

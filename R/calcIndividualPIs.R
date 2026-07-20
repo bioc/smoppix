@@ -11,7 +11,7 @@
 #' @importFrom spatstat.geom nndist npoints nncross.ppp subset.ppp
 #' @seealso \link{estPis}, \link{calcNNPI}
 calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
-                              features, ecdfAll, ecdfsCell, loopFun, minDiff, minObsNN) {
+    features, ecdfAll, ecdfsCell, loopFun, minDiff, minObsNN) {
     NPall <- if (bg <- (null == "background")) {
         npoints(p)
     } else if (null == "CSR") {
@@ -21,11 +21,11 @@ calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
         # hypergeometric
     }
     idGene <- marks(p, drop = FALSE)$gene %in% features
-    #Only calculate PI for selected features
+    # Only calculate PI for selected features
     pSplit <- split.ppp(p[idGene], f = factor(marks(p, drop = FALSE)$gene[idGene]))
     # Divide the work over the available workers
     piList <- loadBalanceBplapply(loopFun = loopFun, iterator = features, func = function(feat) {
-        pSub <- pSplit[[feat]] #ppp-object of a single feature
+        pSub <- pSplit[[feat]] # ppp-object of a single feature
         if ((NP <- npoints(pSub)) >= minObsNN) {
             if (bg && ((NPall - NP) < minDiff)) {
                 distMat <- NULL
@@ -35,7 +35,7 @@ calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
                 distMat <- cbind(self = if (calcNNsingle <- (NP > 1 && ("nn" %in% pis))) {
                     nndist(pSub)
                 }, if ("nnPair" %in% pis) {
-                    id <- !(names(pSplit) == feat)
+                    id <- names(pSplit) != feat
                     if (any(id)) {
                         matrix(unlist(lapply(pSplit[id], function(y) {
                             nncross.ppp(pSub, y,
@@ -45,7 +45,7 @@ calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
                             # Point patterns have been pre-sorted in hyperframe function
                         })), nrow = NP, dimnames = list(NULL, names(pSplit)[id]))
                     }
-                }) #Observed distances
+                }) # Observed distances
             }
             if (isMat <- is.matrix(distMat)) {
                 doubleMatrixRanks <- switch(null,
@@ -58,8 +58,8 @@ calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
                 approxRanks <- doubleMatrixRanks[seq_len(nrow(distMat)), , drop = FALSE]
                 tiesMat <- doubleMatrixRanks[-seq_len(nrow(distMat)), , drop = FALSE]
                 if (bg) {
-                   featId <- match(feat, marks(p, drop = FALSE)$gene)
-                   #Indices of feature in subsampled ppp
+                    featId <- match(feat, marks(p, drop = FALSE)$gene)
+                    # Indices of feature in subsampled ppp
                     selfPoint <- (featId %in% pSubLeft$id)
                     # Correct for self distances, when point itself is part of the permutation,
                     # leading to distance 0, by subtracting one everywhere.
@@ -73,9 +73,9 @@ calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
                     tiesMatCorId <- tiesMatCor == 0
                     # Cfr permutation p-values can never be zero (Phipson 2010)
                     # The observed distance is at least a tie.
-                    tiesMat <- round(((tiesMatCor+tiesMatCorId) / (npoints(pSubLeft$Pout) - selfPoint + tiesMatCorId)
+                    tiesMat <- round(((tiesMatCor + tiesMatCorId) / (npoints(pSubLeft$Pout) - selfPoint + tiesMatCorId)
                     ) * (NPall - selfPoint))
-                  } else {
+                } else {
                     approxRanks <- round(approxRanks * NPall)
                 }
                 colnames(approxRanks) <- colnames(tiesMat) <- colnames(distMat)
@@ -108,8 +108,10 @@ calcIndividualPIs <- function(p, tabObs, pis, pSubLeft, owins, centroids, null,
         midPointDistPI <- if (any(pis == "centroid")) {
             calcWindowDistPI(pSub, centroids = centroids, ecdfAll = ecdfsCell, pi = "centroid")
         }
-        list(windowDists = list(edge = edgeDistPI, centroid = midPointDistPI), 
-             pointDists = list(nn = nnPI, nnPair = nnPIpair))
+        list(
+            windowDists = list(edge = edgeDistPI, centroid = midPointDistPI),
+            pointDists = list(nn = nnPI, nnPair = nnPIpair)
+        )
     })
     names(piList) <- features
     return(piList)

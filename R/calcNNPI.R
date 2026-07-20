@@ -1,5 +1,5 @@
 #' Estimate the PI for nearest neighbour distances with the negative hypergeometric distribution
-#' 
+#'
 #' @description Estimate the PI for the nearest neighbour distances, given a set of ranks,
 #' using the negative hypergeometric distribution
 #'

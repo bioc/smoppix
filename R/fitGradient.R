@@ -19,7 +19,7 @@
 #' @importFrom spatstat.model mppm anova.mppm
 #' @seealso \link{estGradients}
 fitGradient <- function(hypFrame, fixedForm, randomForm, fixedFormSimple,
-                        returnModel = FALSE, silent, ...) {
+    returnModel = FALSE, silent, ...) {
     xyModel <- try(mppm(data = hypFrame, fixedForm, random = randomForm, ...),
         silent = silent
     )

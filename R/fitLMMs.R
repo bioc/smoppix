@@ -22,7 +22,7 @@
 #' @details Genes or gene pairs with insufficient observations will be silently
 #' omitted. When randomVars is provided as a vector, independent random
 #' intercepts are fitted for them by default. Providing them separated by '\' or
-#' ':' as in the lmer formulas is also allowed to reflect nesting structure, 
+#' ':' as in the lmer formulas is also allowed to reflect nesting structure,
 #' but the safest is to construct the formula yourself and pass it onto fitLMMs.
 #'
 #' It is by default assumed that random effects are nested within the point
@@ -37,24 +37,26 @@
 #' @examples
 #' example(addWeightFunction, "smoppix")
 #' lmmModels <- fitLMMs(yangObj, fixedVars = "day", randomVars = "root")
-#' res <- getResults(lmmModels, "nn", "Intercept") #Extract the results
+#' res <- getResults(lmmModels, "nn", "Intercept") # Extract the results
 #' head(res)
 fitLMMs <- function(
-    obj, pis = obj$pis, fixedVars = NULL, randomVars = NULL, verbose = TRUE,
-    returnModels = FALSE, Formula = NULL, randomNested = TRUE, features = getEstFeatures(obj), ...) {
-  stopifnot(is.logical(returnModels), is.logical(randomNested))
-  if(any(id<- !(features %in% getEstFeatures(obj)))){
-    stop("Features ", features[id], "did not have their PI estimated before!
+      obj, pis = obj$pis, fixedVars = NULL, randomVars = NULL, verbose = TRUE,
+      returnModels = FALSE, Formula = NULL, randomNested = TRUE, features = getEstFeatures(obj), ...
+) {
+    stopifnot(is.logical(returnModels), is.logical(randomNested))
+    if (any(id <- !(features %in% getEstFeatures(obj)))) {
+        stop("Features ", features[id], "did not have their PI estimated before!
          Consider rerunning estPis with these features included.")
-  }
-  out <- lapply(pis, function(pi) {
-    fitLMMsSingle(obj, pi = pi, verbose = verbose, fixedVars = fixedVars, randomVars = randomVars,
-        returnModels = returnModels, Formula = Formula, randomNested = randomNested,
-        features = features, ...
-    )
-  })
-  names(out) <- pis
-  return(out)
+    }
+    out <- lapply(pis, function(pi) {
+        fitLMMsSingle(obj,
+            pi = pi, verbose = verbose, fixedVars = fixedVars, randomVars = randomVars,
+            returnModels = returnModels, Formula = Formula, randomNested = randomNested,
+            features = features, ...
+        )
+    })
+    names(out) <- pis
+    return(out)
 }
 #' @return For fitLMMsSingle(), a list of test results, if requested also the linear models are returned
 #' @importFrom lmerTest lmer
@@ -64,143 +66,170 @@ fitLMMs <- function(
 #' @importFrom methods is
 #' @rdname fitLMMs
 #' @order 2
-fitLMMsSingle <- function(obj, pi, fixedVars, randomVars, verbose, returnModels,
-    Formula, randomNested, features) {
-  pi <- match.arg(pi, choices = c(
-    "nn", "nnPair", "edge", "centroid", "nnCell", "nnPairCell"))
-  foo <- checkPi(obj, pi)
-  if (windowId <- (pi %in% c("edge", "centroid"))) {
-    randomVars <- setdiff(union(randomVars, "image/cell"), c("image", "cell"))
-    # For edge and centroid, cell is nested within image
-  }
-  if ((cellId <- grepl("Cell", pi))) {
-    randomVars <- union(randomVars, "image")
-    # For cell, the image is always a design factor
-  }
-  if (pi %in% c("nn", "nnPair") && any(fixedVars %in% (evVars <- getEventVars(obj)))) {
-    fixedVars <- setdiff(fixedVars, evVars)
-    warning("Cell-wise variables cannot be incorporated into analysis with pi ",
+fitLMMsSingle <- function(
+      obj, pi, fixedVars, randomVars, verbose, returnModels,
+      Formula, randomNested, features
+) {
+    pi <- match.arg(pi, choices = c(
+        "nn", "nnPair", "edge", "centroid", "nnCell", "nnPairCell"
+    ))
+    foo <- checkPi(obj, pi)
+    if (windowId <- (pi %in% c("edge", "centroid"))) {
+        randomVars <- setdiff(union(randomVars, "image/cell"), c("image", "cell"))
+        # For edge and centroid, cell is nested within image
+    }
+    if ((cellId <- grepl("Cell", pi))) {
+        randomVars <- union(randomVars, "image")
+        # For cell, the image is always a design factor
+    }
+    if (pi %in% c("nn", "nnPair") && any(fixedVars %in% (evVars <- getEventVars(obj)))) {
+        fixedVars <- setdiff(fixedVars, evVars)
+        warning("Cell-wise variables cannot be incorporated into analysis with pi ",
             pi, ", so variables\n", paste(evVars, collapse = ", "), "\nwill be dropped.",
             immediate. = TRUE
+        )
+    }
+    # For independent distances, no weights are needed
+    randomVarsSplit <- if (!is.null(randomVars)) {
+        grep("[[:punct:]]", value = TRUE, invert = TRUE, unique(unlist(lapply(c(
+            "/",
+            ":"
+        ), function(Split) {
+            lapply(randomVars, function(x) {
+                strsplit(x, Split)[[1]]
+            })
+        }))))
+    }
+    designVars <- c(fixedVars, randomVarsSplit)
+    if (any(id <- !(designVars %in% c(getDesignVars(obj), "image")))) {
+        stop("Design variables ", paste(designVars[id], collapse = " "), " not found in object.")
+    }
+    Formula <- buildFormula(Formula, fixedVars, randomVars)
+    MM <- length(findbars(Formula)) > 0
+    if (verbose) {
+        message("Fitted formula for pi ", pi, ":\n", characterFormula(Formula))
+    }
+    Control <- lmerControl(
+        check.conv.grad = .makeCC("ignore", tol = 0.002, relTol = NULL),
+        check.conv.singular = .makeCC(action = "ignore", tol = 1e-4), # getSingTol() when new lme4 is published
+        check.conv.hess = .makeCC(action = "ignore", tol = 1e-06)
     )
-  }
-  # For independent distances, no weights are needed
-  randomVarsSplit <- if (!is.null(randomVars)) {
-    grep("[[:punct:]]", value = TRUE, invert = TRUE, unique(unlist(lapply(c(
-      "/",
-      ":"
-    ), function(Split) {
-      lapply(randomVars, function(x) {
-        strsplit(x, Split)[[1]]
-      })
-    }))))
-  }
-  designVars <- c(fixedVars, randomVarsSplit)
-  if (any(id <- !(designVars %in% c(getDesignVars(obj), "image")))) {
-    stop("Design variables ", paste(designVars[id], collapse = " "), " not found in object.")
-  }
-  Formula <- buildFormula(Formula, fixedVars, randomVars)
-  MM <- length(findbars(Formula)) > 0
-  if (verbose) {
-    message("Fitted formula for pi ", pi, ":\n", characterFormula(Formula))
-  }
-  Control <- lmerControl(
-    check.conv.grad = .makeCC("ignore", tol = 0.002, relTol = NULL),
-    check.conv.singular = .makeCC(action = "ignore", tol =  1e-4), #getSingTol() when new lme4 is published
-    check.conv.hess = .makeCC(action = "ignore", tol = 1e-06)
-  )
-  Features <- if (grepl("Pair", pi)){makePairs(features)} else {features}
-  pppDf <- centerNumeric(as.data.frame(obj$hypFrame[, c("image", getPPPvars(obj))]))
-  if (is.null(fixedVars)) {
-    contrasts <- NULL
-  } else {
-    discreteVars <- intersect(getDiscreteVars(obj), fixedVars)
-    names(discreteVars) <- discreteVars
-    contrasts <- lapply(discreteVars, function(x) named.contr.sum)
-  }
-  if(!windowId){
-    prepMatorList <- prepareMatrixOrList(obj, pi = pi, features = Features)
-  }
-  if(windowId){
-    models <- loadBalanceBplapply(Features, function(gene) {
-      df <- buildDataFrame(obj, gene = gene, pi = pi, pppDf = pppDf)
-      out <- if (is.null(df) || sum(!is.na(df$pi)) < 3) {
-        NULL
-      } else {
-        if (randomNested) {
-          df <- nestRandom(df, randomVarsSplit, intersect(fixedVars, getPPPvars(obj)))
-        }
-        contrasts <- contrasts[!names(contrasts) %in% vapply(df, FUN.VALUE = TRUE, is.numeric)]
-        fitPiModel(Formula, df, contrasts,
-                            Control, MM = MM, Weight = df$weight)
-      }
-      return(out)
-    })
-  } else {
-    if(cellId){
-      prepTableOrList <- lapply(obj$hypFrame$ppp, function(x){
-        tab <- table(marks(x)[, c("gene", "cell")])
-        class(tab) <- "matrix"
-        t(tab[, colnames(tab)!= "NA"])
-      })
-      prepCells <- lapply(seq_along(prepTableOrList), function(n){
-        eventMarks <- marks(obj$hypFrame$ppp[[n]], drop = FALSE)[, getEventVars(obj), drop = FALSE]
-        eventMarks[match(rownames(prepTableOrList[[n]]), eventMarks$cell),]
-      })
+    Features <- if (grepl("Pair", pi)) {
+        makePairs(features)
     } else {
-      prepTableOrList <- {
-        singleFeats <- getFeatures(obj)
-        emptyTab <- matrix(NA, nrow = nrow(pppDf), ncol = length(singleFeats), 
-                          dimnames = list(rownames(pppDf), singleFeats))
-        for(i in rownames(pppDf)){
-          emptyTab[i,names(getHypFrame(obj)[[i,"tabObs"]])] <- getHypFrame(obj)[[i,"tabObs"]]
-        }
-        emptyTab
-      }
+        features
     }
-    #Prepare generic dataframe with fixed and random effects, later 
-    # swap in weights and outcome per feature
-    baseDf <- if(cellId){
-      Reduce(f = rbind, lapply(seq_along(prepCells), function(n) {
-        cbind(prepCells[[n]][, setdiff(colnames(prepCells[[n]]), "gene"), drop = FALSE],
-              pppDf[n,setdiff(colnames(pppDf), "cell"), drop = FALSE])
-      }))
+    pppDf <- centerNumeric(as.data.frame(obj$hypFrame[, c("image", getPPPvars(obj))]))
+    if (is.null(fixedVars)) {
+        contrasts <- NULL
     } else {
-      pppDf
+        discreteVars <- intersect(getDiscreteVars(obj), fixedVars)
+        names(discreteVars) <- discreteVars
+        contrasts <- lapply(discreteVars, function(x) named.contr.sum)
     }
-    contrasts <- contrasts[!names(contrasts) %in% vapply(baseDf, FUN.VALUE = TRUE, is.numeric)]
-    if(MM){
-      ff <- lFormula(Formula, data = data.frame("pi" = 0.5, baseDf), 
-                   contrasts = contrasts, na.action = na.omit)
-      if (randomNested) {
-        ff$fr <- nestRandom(ff$fr, randomVarsSplit, intersect(fixedVars, getPPPvars(obj)))
-        ff$reTrms <- mkReTrms(findbars(Formula[[length(Formula)]]), ff$fr)
-      }
+    if (!windowId) {
+        prepMatorList <- prepareMatrixOrList(obj, pi = pi, features = Features)
     }
-    modMat <- model.matrix(formula(paste("~",  if(is.null(fixedVars)){"1"} else {paste(collapse = "+", fixedVars)})),
-                          baseDf, contrasts.arg = contrasts) #Fixed effects model matrix
-    Assign <- attr(modMat, "assign")
-    models <- loadBalanceBplapply(Features, function(gene) {
-      mat <- getPiAndWeights(obj, gene = gene, pi = pi, prepMat = prepMatorList,
-                            prepTab = prepTableOrList)
-      out <- if (is.null(mat) || sum(id <- !is.na(mat[, "pi"])) < 3) {
-        NULL
-      } else {
-        if(MM){
-          ff$fr <- ff$fr[id,, drop = FALSE];ff$X <- ff$X[id,, drop = FALSE]
-          attr(ff$X, "assign") <- Assign
-          ff$reTrms$Zt <- ff$reTrms$Zt[, id, drop = FALSE]
+    if (windowId) {
+        models <- loadBalanceBplapply(Features, function(gene) {
+            df <- buildDataFrame(obj, gene = gene, pi = pi, pppDf = pppDf)
+            out <- if (is.null(df) || sum(!is.na(df$pi)) < 3) {
+                NULL
+            } else {
+                if (randomNested) {
+                    df <- nestRandom(df, randomVarsSplit, intersect(fixedVars, getPPPvars(obj)))
+                }
+                contrasts <- contrasts[!names(contrasts) %in% vapply(df, FUN.VALUE = TRUE, is.numeric)]
+                fitPiModel(Formula, df, contrasts,
+                    Control,
+                    MM = MM, Weight = df$weight
+                )
+            }
+            return(out)
+        })
+    } else {
+        if (cellId) {
+            prepTableOrList <- lapply(obj$hypFrame$ppp, function(x) {
+                tab <- table(marks(x)[, c("gene", "cell")])
+                class(tab) <- "matrix"
+                t(tab[, colnames(tab) != "NA"])
+            })
+            prepCells <- lapply(seq_along(prepTableOrList), function(n) {
+                eventMarks <- marks(obj$hypFrame$ppp[[n]], drop = FALSE)[, getEventVars(obj), drop = FALSE]
+                eventMarks[match(rownames(prepTableOrList[[n]]), eventMarks$cell), ]
+            })
+        } else {
+            prepTableOrList <- {
+                singleFeats <- getFeatures(obj)
+                emptyTab <- matrix(NA,
+                    nrow = nrow(pppDf), ncol = length(singleFeats),
+                    dimnames = list(rownames(pppDf), singleFeats)
+                )
+                for (i in rownames(pppDf)) {
+                    emptyTab[i, names(getHypFrame(obj)[[i, "tabObs"]])] <- getHypFrame(obj)[[i, "tabObs"]]
+                }
+                emptyTab
+            }
         }
-        fitSingleLmmModel(ff = ff, y = mat[id, "pi"], Terms = terms(Formula), modMat = modMat[id,,drop = FALSE],
-                    weights = mat[id, "weights"], Control = Control, MM = MM, Assign = Assign)
-      }
-      return(out)
-    })
-  }
-  names(models) <- Features
-  results <- extractResults(models, hypFrame = obj$hypFrame, fixedVars)
-  # Effect size, standard error, p-value and adjusted p-value per mixed effect
-  return(list(results = results, models = if(returnModels) models))
+        # Prepare generic dataframe with fixed and random effects, later
+        # swap in weights and outcome per feature
+        baseDf <- if (cellId) {
+            Reduce(f = rbind, lapply(seq_along(prepCells), function(n) {
+                cbind(
+                    prepCells[[n]][, setdiff(colnames(prepCells[[n]]), "gene"), drop = FALSE],
+                    pppDf[n, setdiff(colnames(pppDf), "cell"), drop = FALSE]
+                )
+            }))
+        } else {
+            pppDf
+        }
+        contrasts <- contrasts[!names(contrasts) %in% vapply(baseDf, FUN.VALUE = TRUE, is.numeric)]
+        if (MM) {
+            ff <- lFormula(Formula,
+                data = data.frame("pi" = 0.5, baseDf),
+                contrasts = contrasts, na.action = na.omit
+            )
+            if (randomNested) {
+                ff$fr <- nestRandom(ff$fr, randomVarsSplit, intersect(fixedVars, getPPPvars(obj)))
+                ff$reTrms <- mkReTrms(findbars(Formula[[length(Formula)]]), ff$fr)
+            }
+        }
+        modMat <- model.matrix(
+            formula(paste("~", if (is.null(fixedVars)) {
+                "1"
+            } else {
+                paste(collapse = "+", fixedVars)
+            })),
+            baseDf,
+            contrasts.arg = contrasts
+        ) # Fixed effects model matrix
+        Assign <- attr(modMat, "assign")
+        models <- loadBalanceBplapply(Features, function(gene) {
+            mat <- getPiAndWeights(obj,
+                gene = gene, pi = pi, prepMat = prepMatorList,
+                prepTab = prepTableOrList
+            )
+            out <- if (is.null(mat) || sum(id <- !is.na(mat[, "pi"])) < 3) {
+                NULL
+            } else {
+                if (MM) {
+                    ff$fr <- ff$fr[id, , drop = FALSE]
+                    ff$X <- ff$X[id, , drop = FALSE]
+                    attr(ff$X, "assign") <- Assign
+                    ff$reTrms$Zt <- ff$reTrms$Zt[, id, drop = FALSE]
+                }
+                fitSingleLmmModel(
+                    ff = ff, y = mat[id, "pi"], Terms = terms(Formula), modMat = modMat[id, , drop = FALSE],
+                    weights = mat[id, "weights"], Control = Control, MM = MM, Assign = Assign
+                )
+            }
+            return(out)
+        })
+    }
+    names(models) <- Features
+    results <- extractResults(models, hypFrame = obj$hypFrame, fixedVars)
+    # Effect size, standard error, p-value and adjusted p-value per mixed effect
+    return(list(results = results, models = if (returnModels) models))
 }
 #' Take an existing frame, add outcome and weight and fit lmer model
 #'
@@ -215,25 +244,32 @@ fitLMMsSingle <- function(obj, pi, fixedVars, randomVars, verbose, returnModels,
 #' @importFrom lme4 mkLmerDevfun optimizeLmer mkMerMod
 #' @importFrom stats lm.wfit
 fitSingleLmmModel <- function(ff, y, Control, Terms, modMat, MM, Assign, weights = NULL) {
-  if(MM){
-    fr <- ff$fr                    # this is a data.frame (model frame)
-    ## Use model-frame column names used by stats::model.frame
-    fr$`(weights)` <- weights
-    fr[["pi - 0.5"]] <- y - 0.5               # replace response
-    mod <- try({
-      devfun <- mkLmerDevfun(fr, ff$X, ff$reTrms, control = Control)
-      opt <- optimizeLmer(devfun, control = Control)
-      out <- mkMerMod(rho = environment(devfun), opt = opt, 
-                      reTrms = ff$reTrms, fr = fr)
-      out <- lmerTest:::as_lmerModLT(out, devfun = devfun)
-    }, silent = TRUE)
-  }
-  # Switch to fixed effects model when fit failed
-  if(!MM || inherits(mod, "try-error")){
-    mod <- lm_from_wfit(lm.wfit(y = y, x = modMat, w = weights), y = y, 
-                        Assign = Assign, Terms = Terms)
-  }
-  return(mod)
+    if (MM) {
+        fr <- ff$fr # this is a data.frame (model frame)
+        ## Use model-frame column names used by stats::model.frame
+        fr$`(weights)` <- weights
+        fr[["pi - 0.5"]] <- y - 0.5 # replace response
+        mod <- try(
+            {
+                devfun <- mkLmerDevfun(fr, ff$X, ff$reTrms, control = Control)
+                opt <- optimizeLmer(devfun, control = Control)
+                out <- mkMerMod(
+                    rho = environment(devfun), opt = opt,
+                    reTrms = ff$reTrms, fr = fr
+                )
+                out <- lmerTest:::as_lmerModLT(out, devfun = devfun)
+            },
+            silent = TRUE
+        )
+    }
+    # Switch to fixed effects model when fit failed
+    if (!MM || inherits(mod, "try-error")) {
+        mod <- lm_from_wfit(lm.wfit(y = y, x = modMat, w = weights),
+            y = y,
+            Assign = Assign, Terms = Terms
+        )
+    }
+    return(mod)
 }
 #' Add compoments to a result from lm.wfit to make it a minimally valid lm object
 #'
@@ -244,19 +280,22 @@ fitSingleLmmModel <- function(ff, y, Control, Terms, modMat, MM, Assign, weights
 #' @returns A object of class lm
 #' @export
 #' @examples
-#' n <- 7 ; p <- 2
+#' n <- 7
+#' p <- 2
 #' X <- matrix(rnorm(n * p), n, p) # no intercept!
 #' y <- rnorm(n)
 #' w <- rnorm(n)^2
 #' lmw <- lm.wfit(x = X, y = y, w = w)
-#' lmObject <- lm_from_wfit(lmw, y = y, Terms = terms(Y~X), 
-#' Assign = attr(model.matrix(~X), "assign"))
+#' lmObject <- lm_from_wfit(lmw,
+#'     y = y, Terms = terms(Y ~ X),
+#'     Assign = attr(model.matrix(~X), "assign")
+#' )
 #' summary(lmObject)
 #' anova(lmObject)
 lm_from_wfit <- function(obj, y, Terms, Assign) {
-  # Create a minimal lm object
-  obj <- c(obj, list(y = y, terms = Terms))
-  obj$assign <- Assign
-  class(obj) <- "lm"
-  return(obj)
+    # Create a minimal lm object
+    obj <- c(obj, list(y = y, terms = Terms))
+    obj$assign <- Assign
+    class(obj) <- "lm"
+    return(obj)
 }

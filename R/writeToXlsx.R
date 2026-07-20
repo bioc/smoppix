@@ -25,10 +25,12 @@
 #' file.remove("tmpFile.xlsx")
 #' @importFrom openxlsx createWorkbook writeData addWorksheet saveWorkbook getSheetNames
 #' @seealso \link[openxlsx]{createWorkbook},\link[openxlsx]{writeData}, \link[openxlsx]{addWorksheet}, \link[openxlsx]{saveWorkbook}
-writeToXlsx <- function(obj, file, overwrite = FALSE, digits = 3, 
-                        sigLevel = 0.05) {
-    stopifnot(is.logical(overwrite), is.character(file), is.numeric(digits), 
-              is.numeric(sigLevel))
+writeToXlsx <- function(obj, file, overwrite = FALSE, digits = 3,
+    sigLevel = 0.05) {
+    stopifnot(
+        is.logical(overwrite), is.character(file), is.numeric(digits),
+        is.numeric(sigLevel)
+    )
     if (!grepl("\\.xlsx", file)) {
         message("Adding .xlsx extension to file")
         file <- paste0(file, ".xlsx")
@@ -64,15 +66,15 @@ writeToXlsx <- function(obj, file, overwrite = FALSE, digits = 3,
                 TRUE
             )) {
                 subMat2 <- if (effect == "Intercept") {
-                  subMat[match.fun(if (smallPI) "<" else ">")(subMat[, "Estimate"], 0.5), , drop = FALSE]
+                    subMat[match.fun(if (smallPI) "<" else ">")(subMat[, "Estimate"], 0.5), , drop = FALSE]
                 } else {
-                  subMat
+                    subMat
                 }
-                if(nrow(subMat2)){
-                  #Only add sheet when significant findings
-                  sheetName <- makeSheetName(pi, effect, smallPI)
-                  addWorksheet(wb, sheetName) # Create sheet and write data to it
-                  writeData(wb, sheet = sheetName, x = data.frame(subMat2), colNames = TRUE, rowNames = TRUE)
+                if (nrow(subMat2)) {
+                    # Only add sheet when significant findings
+                    sheetName <- makeSheetName(pi, effect, smallPI)
+                    addWorksheet(wb, sheetName) # Create sheet and write data to it
+                    writeData(wb, sheet = sheetName, x = data.frame(subMat2), colNames = TRUE, rowNames = TRUE)
                 }
             }
         }

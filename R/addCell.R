@@ -73,32 +73,32 @@
 #' names(wList) <- rownames(hypFrame) # Matching names is necessary
 #' hypFrame2 <- addCell(hypFrame, wList)
 addCell <- function(hypFrame,
-                    owins,
-                    cellTypes = NULL,
-                    findOverlappingOwins = FALSE,
-                    warnOut = TRUE,
-                    coords = c("x", "y"),
-                    verbose = TRUE,
-                    addCellMarkers = TRUE,
-                    overwriteCells = FALSE,
-                    ...) {
+    owins,
+    cellTypes = NULL,
+    findOverlappingOwins = FALSE,
+    warnOut = TRUE,
+    coords = c("x", "y"),
+    verbose = TRUE,
+    addCellMarkers = TRUE,
+    overwriteCells = FALSE,
+    ...) {
     stopifnot(
         nrow(hypFrame) == length(owins),
         all(rownames(hypFrame) %in% names(owins)),
         is.hyperframe(hypFrame),
         is.null(cellTypes) || is.data.frame(cellTypes)
     )
-    if(!is.null(hypFrame$owins) && !overwriteCells){
-      stop("Cells already present in hyperframe!
+    if (!is.null(hypFrame$owins) && !overwriteCells) {
+        stop("Cells already present in hyperframe!
            Set overwriteCells=TRUE to replcae them")
     }
     if (verbose) {
         message("Converting windows to spatstat owins")
     }
     # Convert different types of windows to owins
-    owins <- loadBalanceBplapply(Nam <- names(owins), function(nam){
-            convertToOwins(owins[[nam]], coords = coords, namePPP = nam, ...)
-        })
+    owins <- loadBalanceBplapply(Nam <- names(owins), function(nam) {
+        convertToOwins(owins[[nam]], coords = coords, namePPP = nam, ...)
+    })
     names(owins) <- Nam
     if (addCellMarkers) {
         if (ct <- is.data.frame(cellTypes)) {
@@ -112,7 +112,7 @@ addCell <- function(hypFrame,
         if (verbose) {
             message("Adding cell names for point pattern")
         }
-        hypFrame$ppp <- loadBalanceBplapply(rownames(hypFrame), function(nn){
+        hypFrame$ppp <- loadBalanceBplapply(rownames(hypFrame), function(nn) {
             if (verbose) {
                 message(match(nn, rownames(hypFrame)), " of ", nrow(hypFrame))
             }
@@ -129,8 +129,8 @@ addCell <- function(hypFrame,
             cellOut <- rep("NA", NP)
             idLeft <- seq_len(NP)
             for (i in names(owins[[nn]])) {
-                idIn <- which(inside.owin(ppp[idLeft,], w = owins[[nn]][[i]]))
-                if(length(idIn)){
+                idIn <- which(inside.owin(ppp[idLeft, ], w = owins[[nn]][[i]]))
+                if (length(idIn)) {
                     cellOut[idLeft[idIn]] <- i
                     # Don't overwrite, stick to first match, and do not detect
                     # overlap
@@ -156,8 +156,9 @@ addCell <- function(hypFrame,
             if (ct) {
                 newmarks <-
                     cbind(newmarks, cellTypes[match(cellOut, cellTypes$cell),
-                                              otherCellNames,
-                                              drop = FALSE])
+                        otherCellNames,
+                        drop = FALSE
+                    ])
             }
             marks(ppp) <- newmarks
             return(ppp)
@@ -175,4 +176,4 @@ addCell <- function(hypFrame,
     }
     return(hypFrame)
 }
-# 
+#

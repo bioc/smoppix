@@ -15,9 +15,11 @@ bibliography: ../inst/REFERENCES.bib
 ---
 
 ```{r smoppiximage, echo=FALSE}
-htmltools::img(src = knitr::image_uri("../inst/Smoppix.jpg"), 
-               style = 'position:absolute; top:0; right:0; padding:10px;',
-               alt = 'logo', width = "200px", heigth = "200px")
+htmltools::img(
+    src = knitr::image_uri("../inst/Smoppix.jpg"),
+    style = "position:absolute; top:0; right:0; padding:10px;",
+    alt = "logo", width = "200px", heigth = "200px"
+)
 ```
 
 ```{r setup, include=FALSE, echo=FALSE}
@@ -83,7 +85,7 @@ register(param)
 On windows, once the package has been built, for multithreading use
 
 ```{r multiThreadWindows, eval = FALSE}
-register(SnowParam(workers = nCores, type = "SOCK")) #or doParallel
+register(SnowParam(workers = nCores, type = "SOCK")) # or doParallel
 ```
 Wherever applicable, the registered backend will be used throughout the analysis.
 For serial calculations, for instance if memory is limiting, choose
@@ -147,7 +149,7 @@ A couple of most expressed genes are shown as coloured dots as shown in the lege
 ### Tests for univariate aggregation or regularity: nearest neighbour distances
 
 ```{r numFeats}
-numFeats <- 10 #Limit number of genes in the analysis for computational reasons
+numFeats <- 10 # Limit number of genes in the analysis for computational reasons
 ```
 
 The first round of tests concerns the aggregation or regularity of individual transcripts, for which we look at the distribution of nearest neighbour distances (pi = 'nn'). Since the shape and size differ strongly between the roots, we choose the background of all other transcripts as null distribution, i.e. we look for transcripts aggregated _with respect to_ all other transcripts. As this is computationally most efficient, we also fit the PI for the bivariate analysis in this step ('nnPair', see below). For computation reasons, we limit the analysis to `r numFeats` genes.
@@ -181,9 +183,9 @@ This dataframe can then be used for mixed modelling, either in R or in an other 
 
 ```{r lmerManual}
 library(lmerTest, quietly = TRUE)
-#Make sure to nest root within day, without including a random effect for day
-dfUniNN$dayRoot = paste0(dfUniNN$day, dfUniNN$root)
-lmeMod <- lmerTest::lmer(pi - 0.5 ~ day + (1 |dayRoot),
+# Make sure to nest root within day, without including a random effect for day
+dfUniNN$dayRoot <- paste0(dfUniNN$day, dfUniNN$root)
+lmeMod <- lmerTest::lmer(pi - 0.5 ~ day + (1 | dayRoot),
     data = dfUniNN, na.action = na.omit,
     weights = weight, contrasts = list("day" = "contr.sum")
 )
@@ -228,8 +230,8 @@ dfBiNN <- buildDataFrame(nnObj, gene = "SmVND2--SmPINR", pi = "nnPair")
 Finally for the mixed model:
 
 ```{r mixmodfit}
-#Make sure to nest root within day, without including a random effect for day
-dfBiNN$dayRoot = paste0(dfBiNN$day, dfBiNN$root)
+# Make sure to nest root within day, without including a random effect for day
+dfBiNN$dayRoot <- paste0(dfBiNN$day, dfBiNN$root)
 lmeModNN <- lmerTest::lmer(pi - 0.5 ~ day + (1 | dayRoot),
     data = dfBiNN, na.action = na.omit,
     weights = weight, contrasts = list("day" = "contr.sum")
@@ -261,8 +263,10 @@ A second dataset was published in a [paper](https://www.nature.com/articles/s415
 
 ```{r readInEngData, warning=FALSE}
 data(Eng)
-hypEng <- buildHyperFrame(Eng, coordVars = c("x", "y"),
-    imageVars = c("fov", "experiment"))
+hypEng <- buildHyperFrame(Eng,
+    coordVars = c("x", "y"),
+    imageVars = c("fov", "experiment")
+)
 ```
 
 Plotting an overview
@@ -289,8 +293,10 @@ plotExplore(hypEng)
 First, we test for vicinity of the RNA molecules to cell boundaries or centroids, and for localization patterns within the cell. For this we pass different PI arguments to the _estPis()_ function. As null hypothesis, we choose complete spatial randomness (CSR) within the cell, which seems most natural, although the "background" option is also available. The suffix "Cell" indicates that aggregation and colocalization is tested within the same cell only, so not across the tissue.
 
 ```{r engpis}
-engPis <- estPis(hypEng, pis = c("edge", "centroid", "nnCell", "nnPairCell"),
-    null = "CSR", verbose = FALSE)
+engPis <- estPis(hypEng,
+    pis = c("edge", "centroid", "nnCell", "nnPairCell"),
+    null = "CSR", verbose = FALSE
+)
 ```
 
 As before, the weight function needs to be added for the nearest neighbour PIs.
@@ -315,8 +321,10 @@ allModsNNcell <- fitLMMs(engPis, fixedVars = "experiment")
 For the "edge" and "centroid" options, each individual RNA-molecule is an observation in the model, and random effects are added for both cell and image. For "nnCell" and "nnPairCell", the observations are averaged per cell, and so only a random effect common to all cells of a single image remains. Now we plot the genes with the strongest remoteness from the cell edge:
 
 ```{r plotEdgeEng, fig.height = 6.5}
-plotTopResults(hypEng, results = allModsNNcell, pi = "edge", what = "far",
-    numFeats = 1)
+plotTopResults(hypEng,
+    results = allModsNNcell, pi = "edge", what = "far",
+    numFeats = 1
+)
 ```
 
 Note that the cells are selected for high expression of the gene and are not shown in their original position! Now plot the gene with strongest intracellular aggregation:
@@ -361,51 +369,61 @@ Keep in mind though that a gradient that is significant for a computer may look 
 Probabilistic indices are features extracted from point patterns that can serve purposes other than hypothesis testing. Here we demonstrate their use as interpretable predictors for predicting tumor type from cell type locations on a breast cancer dataset from a [publication](https://doi.org/10.1016/j.cell.2018.08.039) by @Keren2018, previously analysed by @VanderDoes2023. Make sure to install the _funkycells_ package to access the data.
 
 ```{r loadTNBC}
-if(reqFunky <- require(funkycells)){
+if (reqFunky <- require(funkycells)) {
     data("TNBC_pheno")
     data("TNBC_meta")
     TNBC_pheno$Age <- TNBC_meta$Age[match(TNBC_pheno$Person, TNBC_meta$Person)]
-    TNBC_pheno$Class <- ifelse(TNBC_pheno$Class=="0", "mixed", "compartentalised")
-    hypTNBC <- buildHyperFrame(TNBC_pheno, coordVars = c("cellx", "celly"), 
-                               imageVars = c("Person", "Class", "Age"), featureName = "Phenotype")
-    hypTNBC <- hypTNBC[order(hypTNBC$Class),] #Order by class for plots
+    TNBC_pheno$Class <- ifelse(TNBC_pheno$Class == "0", "mixed", "compartentalised")
+    hypTNBC <- buildHyperFrame(TNBC_pheno,
+        coordVars = c("cellx", "celly"),
+        imageVars = c("Person", "Class", "Age"), featureName = "Phenotype"
+    )
+    hypTNBC <- hypTNBC[order(hypTNBC$Class), ] # Order by class for plots
 }
 ```
 
 ```{r plotTNBC, fig.cap = "Explorative plot of triple negative breast cancer dataset.\\parencite{Keren2018}", fig.height = 8}
-if(reqFunky){
-    plotExplore(hypTNBC, Cex.main = 0.7, features = c("Tumor", "Macrophage", "CD8T"), 
-                CexLegend = 0.85)
+if (reqFunky) {
+    plotExplore(hypTNBC,
+        Cex.main = 0.7, features = c("Tumor", "Macrophage", "CD8T"),
+        CexLegend = 0.85
+    )
 }
 ```
 
 Fit a penalised regression model, and estimate its predictive accuracy through cross-validation.
 
 ```{r analyseTNBC}
-if(reqFunky){
-    #Select feature through hypothesis tests
-    pisTNBC = estPis(hypTNBC, pis = c("nn", "nnPair"), null = "background", verbose = FALSE)
-    pisTNBC = addWeightFunction(pisTNBC)
-    TNBClmms = fitLMMs(pisTNBC, fixedVars = c("Age", "Class"), verbose = TRUE)
-    #Extract PIs of significant features
-    nnRes = getResults(TNBClmms, "nn", "Class")
-    sigLevel = 0.05
-    nnSig = rownames(nnRes)[nnRes[, "pAdj"] < sigLevel]
-    nnPairRes = getResults(TNBClmms, "nnPair", "Class")
-    nnPairSig = rownames(nnPairRes)[nnPairRes[, "pAdj"] < sigLevel & !is.na(nnPairRes[, "pAdj"])]
-    nnPis = as.matrix(vapply(pisTNBC$hypFrame$pimRes, FUN.VALUE = double(nnn <- (length(nnSig)+ length(nnPairSig))), function(x){
-        c(if(length(nnSig)) x$pointDists$nn[nnSig],
-          if(length(nnPairSig)) vapply(nnPairSig, FUN.VALUE = 1, function(y) {
-              getGp(gp = y, x$pointDists$nnPair, notFoundReturn = NA)
-          }))
+if (reqFunky) {
+    # Select feature through hypothesis tests
+    pisTNBC <- estPis(hypTNBC, pis = c("nn", "nnPair"), null = "background", verbose = FALSE)
+    pisTNBC <- addWeightFunction(pisTNBC)
+    TNBClmms <- fitLMMs(pisTNBC, fixedVars = c("Age", "Class"), verbose = TRUE)
+    # Extract PIs of significant features
+    nnRes <- getResults(TNBClmms, "nn", "Class")
+    sigLevel <- 0.05
+    nnSig <- rownames(nnRes)[nnRes[, "pAdj"] < sigLevel]
+    nnPairRes <- getResults(TNBClmms, "nnPair", "Class")
+    nnPairSig <- rownames(nnPairRes)[nnPairRes[, "pAdj"] < sigLevel & !is.na(nnPairRes[, "pAdj"])]
+    nnPis <- as.matrix(vapply(pisTNBC$hypFrame$pimRes, FUN.VALUE = double(nnn <- (length(nnSig) + length(nnPairSig))), function(x) {
+        c(
+            if (length(nnSig)) x$pointDists$nn[nnSig],
+            if (length(nnPairSig)) {
+                vapply(nnPairSig, FUN.VALUE = 1, function(y) {
+                    getGp(gp = y, x$pointDists$nnPair, notFoundReturn = NA)
+                })
+            }
+        )
     }))
-    if(nnn!=1){nnPis = t(nnPis)}
-    colnames(nnPis) = c(nnSig, nnPairSig)
-    nnPis[is.na(nnPis)] = 0.5 #Replace missing values by 0.5
-    if(require(glmnet, quietly = TRUE)){
+    if (nnn != 1) {
+        nnPis <- t(nnPis)
+    }
+    colnames(nnPis) <- c(nnSig, nnPairSig)
+    nnPis[is.na(nnPis)] <- 0.5 # Replace missing values by 0.5
+    if (require(glmnet, quietly = TRUE)) {
         set.seed(20062024)
-        lassoModel = cv.glmnet(factor(hypTNBC$Class), x = cbind("Age" = hypTNBC$Age, nnPis), family = "binomial", alpha = 1, nfolds = 10, type.measure = "class")
-        lassoModel #In-sample misclassification error is quite low
+        lassoModel <- cv.glmnet(factor(hypTNBC$Class), x = cbind("Age" = hypTNBC$Age, nnPis), family = "binomial", alpha = 1, nfolds = 10, type.measure = "class")
+        lassoModel # In-sample misclassification error is quite low
     }
 }
 ```
@@ -415,8 +433,10 @@ if(reqFunky){
 A schematic overview of the _smoppix_ pipeline, starting from a hyperframe, with corresponding functions is shown below:
 
 ```{r schematic, echo=FALSE}
-htmltools::img(src = knitr::image_uri("../inst/tikzPic.jpg"),
-               alt = 'scheme', width = "800px", heigth = "800px")
+htmltools::img(
+    src = knitr::image_uri("../inst/tikzPic.jpg"),
+    alt = "scheme", width = "800px", heigth = "800px"
+)
 ```
 
 # Troubleshooting

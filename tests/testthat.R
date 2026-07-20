@@ -15,11 +15,13 @@ gene <- sample(gs, n, TRUE)
 fov <- as.character(sample(nfov, n, TRUE))
 condition <- as.character(sample(conditions, n, TRUE))
 f <- paste(fov, condition, sep = "_")
-age <- unsplit(lapply(split(integer(n), f = f), function(x) {rep(runif(1, 18, 98))}), f = f)
+age <- unsplit(lapply(split(integer(n), f = f), function(x) {
+    rep(runif(1, 18, 98))
+}), f = f)
 # construct data.frame of molecule coordinates
 df <- data.frame(gene, x, y, fov, condition = condition, age = age)
 # A list of point patterns
-listPPP <- tapply(seq(nrow(df)), df$fov, function(i) {
+listPPP <- tapply(seq_len(nrow(df)), df$fov, function(i) {
     ppp(x = df$x[i], y = df$y[i], marks = df[i, c("gene", "condition", "fov", "age"), drop = FALSE])
 }, simplify = FALSE)
 # Regions of interest (roi): Diamond in the center plus four triangles
@@ -70,7 +72,7 @@ hypFrame2 <- addNuclei(hypFrame2, nList, verbose = FALSE)
 # Register the parallel backend
 nCores <- 2
 register(MulticoreParam(nCores))
-#register(SerialParam()) # Switch on when mapping test coverage
+# register(SerialParam()) # Switch on when mapping test coverage
 pis <- c("nn", "nnPair", "edge", "centroid", "nnCell", "nnPairCell")
 piEstsBG <- estPis(hypFrame2, pis = pis, null = "background", verbose = FALSE)
 piEstsCSR <- estPis(hypFrame2, pis = pis, null = "CSR", verbose = FALSE)
@@ -83,11 +85,13 @@ objBG <- addWeightFunction(piEstsBG, designVars = "condition")
 objCSR <- addWeightFunction(piEstsCSR, designVars = "condition")
 # Fit Yang models too
 data(Yang)
-hypYang <- buildHyperFrame(Yang[Yang$section %in% paste0("section", seq_len(3)),], 
-                           coordVars = c("x", "y"), imageVars = c("day", "root", "section"
-)) #Subset for speed
-yangPims <- estPis(hypYang, features = getFeatures(hypYang)[12:21], 
-                   pis = c("nn", "nnPair"), verbose = FALSE, nPointsAll = 2e3)
+hypYang <- buildHyperFrame(Yang[Yang$section %in% paste0("section", seq_len(3)), ],
+    coordVars = c("x", "y"), imageVars = c("day", "root", "section")
+) # Subset for speed
+yangPims <- estPis(hypYang,
+    features = getFeatures(hypYang)[12:21],
+    pis = c("nn", "nnPair"), verbose = FALSE, nPointsAll = 2e3
+)
 yangPims <- addWeightFunction(yangPims, lowestLevelVar = "section")
 data(Eng)
 hypEng <- buildHyperFrame(Eng, coordVars = c("x", "y"), imageVars = c("fov", "experiment"))

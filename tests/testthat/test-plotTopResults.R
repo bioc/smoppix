@@ -1,5 +1,6 @@
 context("Plotting of top results")
-linModsMP <- fitLMMs(objBG, returnModels = TRUE, features = getFeatures(objBG)[1:5],
+linModsMP <- fitLMMs(objBG,
+    returnModels = TRUE, features = getFeatures(objBG)[1:5],
     fixedVars = "condition", pi = "centroid"
 )
 linModsNNint <- fitLMMs(yangPims, fixedVars = "day", randomVars = "root", features = getFeatures(yangPims)[15:20])

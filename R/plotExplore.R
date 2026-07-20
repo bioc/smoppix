@@ -46,12 +46,13 @@
 #' plotExplore(hypYang, titleVar = "day", scaleBarSize = c(20, 500))
 #' plotExplore(hypYang, features = c("SmRBRb", "SmTMO5b", "SmWER--SmAHK4f"))
 plotExplore <- function(
-    hypFrame, features = getFeatures(hypFrame)[seq_len(6)], ppps, numPps,
-    maxPlot = 1e+05, Cex = 1, plotWindows = !is.null(hypFrame$owins), plotPoints = TRUE,
-    plotNuclei = !is.null(hypFrame$nuclei), piEsts = NULL,
-    Xlim = NULL, Ylim = NULL, Cex.main = 1.1, Mar = c(0.5, 0.1, 0.9, 0.1), titleVar = NULL,
-    piColourCell = NULL, palCols = c("blue", "yellow"), nucCol ="lightblue", border = NULL, 
-    CexLegend = 1.4, CexLegendMain = 1.7, Nrow, Cols, scaleBarSize = NULL) {
+      hypFrame, features = getFeatures(hypFrame)[seq_len(6)], ppps, numPps,
+      maxPlot = 1e+05, Cex = 1, plotWindows = !is.null(hypFrame$owins), plotPoints = TRUE,
+      plotNuclei = !is.null(hypFrame$nuclei), piEsts = NULL,
+      Xlim = NULL, Ylim = NULL, Cex.main = 1.1, Mar = c(0.5, 0.1, 0.9, 0.1), titleVar = NULL,
+      piColourCell = NULL, palCols = c("blue", "yellow"), nucCol = "lightblue", border = NULL,
+      CexLegend = 1.4, CexLegendMain = 1.7, Nrow, Cols, scaleBarSize = NULL
+) {
     if (!is.hyperframe(hypFrame)) {
         hypFrame <- hypFrame$hypFrame
     }
@@ -59,13 +60,13 @@ plotExplore <- function(
         warning("No windows present in hyperframe object")
     }
     if (plotNuclei && is.null(hypFrame$nuclei)) {
-      warning("No nuclei present in hyperframe object")
+        warning("No nuclei present in hyperframe object")
     }
     stopifnot(
         is.hyperframe(hypFrame), is.character(features), is.numeric(maxPlot),
         is.null(titleVar) || titleVar %in% getPPPvars(hypFrame),
         missing(numPps) || length(numPps) == 1,
-        is.null(scaleBarSize) || (is.numeric(scaleBarSize) && length(scaleBarSize)==2)
+        is.null(scaleBarSize) || (is.numeric(scaleBarSize) && length(scaleBarSize) == 2)
     )
     if (colourCells <- !is.null(piColourCell) && plotWindows) {
         featsplit <- sund(features)
@@ -91,24 +92,28 @@ plotExplore <- function(
     features <- unique(unlist(lapply(features, sund)))
     npp <- nrow(hypFrame)
     if (missing(ppps)) {
-        ppps <- if(missing(numPps)){
+        ppps <- if (missing(numPps)) {
             seq_len(min(99, npp))
         } else {
-            #Select point patterns with highest expression
+            # Select point patterns with highest expression
             order(decreasing = TRUE, vapply(hypFrame$tabObs, FUN.VALUE = double(1), function(x) {
-                sum(vapply(sund(features), FUN.VALUE = double(1), function(y) {if(is.null(tmp <- getGp(x, y))) NA else tmp}))
+                sum(vapply(sund(features), FUN.VALUE = double(1), function(y) {
+                    if (is.null(tmp <- getGp(x, y))) NA else tmp
+                }))
             }))[seq_len(numPps)]
         }
     } else if (is.character(ppps)) {
         ppps <- match(ppps, rownames(hypFrame))
     }
-    if(missing(Cols))
-      Cols <- makeCols(features, hypFrame)
+    if (missing(Cols)) {
+        Cols <- makeCols(features, hypFrame)
+    }
     old.par <- par(no.readonly = TRUE)
-    on.exit(par(old.par))
+    on.exit(par(old.par), add = TRUE)
     LL <- length(ppps)
-    if(missing(Nrow))
+    if (missing(Nrow)) {
         Nrow <- ceiling(sqrt(LL))
+    }
     Ncol <- (LL %/% Nrow) + 1
     par(mfrow = c(Nrow, Ncol), mar = Mar)
     baa <- lapply(ppps, function(i) {
@@ -120,17 +125,16 @@ plotExplore <- function(
         colVec <- Cols[marks(PPPsub, drop = FALSE)$gene]
         cordMat <- coords(PPPsub)
         ordVec <- order(colVec != "grey")
-        Xlim <- if(!is.null(Xlim)) {
-          Xlim 
-        } else if(!is.null(scaleBarSize)){
-          c(min(cordMat[, "x"]) - scaleBarSize[1]*4, max(cordMat[, "x"]))
-        } 
+        Xlim <- if (!is.null(Xlim)) {
+            Xlim
+        } else if (!is.null(scaleBarSize)) {
+            c(min(cordMat[, "x"]) - scaleBarSize[1] * 4, max(cordMat[, "x"]))
+        }
         plot(cordMat[ordVec, ],
             main = paste(hypFrame$image[i], if (!is.null(titleVar)) {
                 hypFrame[[i, titleVar]]
             }), type = "n", cex.main = Cex.main, xaxt = "n", yaxt = "n", xaxs = "i",
             yaxs = "i", asp = 1, ylim = Ylim, xlim = Xlim
-           
         )
         if (plotWindows) {
             if (colourCells) {
@@ -148,20 +152,22 @@ plotExplore <- function(
             })
         }
         if (plotNuclei) {
-          foo <- lapply(names(hypFrame$nuclei[[i]]), function(cell) {
-            plot.owin(hypFrame[i, "nuclei", drop = TRUE][[cell]],
-                      add = TRUE, border = nucCol
-            )
-          })
+            foo <- lapply(names(hypFrame$nuclei[[i]]), function(cell) {
+                plot.owin(hypFrame[i, "nuclei", drop = TRUE][[cell]],
+                    add = TRUE, border = nucCol
+                )
+            })
         }
         if (plotPoints) {
             points(cordMat[ordVec, ], pch = ".", col = colVec[ordVec], cex = Cex)
         }
-        if(!is.null(scaleBarSize)){
-          xShift <- PPPsub$window$xrange[1]- scaleBarSize[1]
-          yShift <- PPPsub$window$yrange[1]
-          rect(xShift - scaleBarSize[1], yShift + scaleBarSize[2]*0.2, xShift, 
-               scaleBarSize[2]*1.2 + yShift, col = "black")
+        if (!is.null(scaleBarSize)) {
+            xShift <- PPPsub$window$xrange[1] - scaleBarSize[1]
+            yShift <- PPPsub$window$yrange[1]
+            rect(xShift - scaleBarSize[1], yShift + scaleBarSize[2] * 0.2, xShift,
+                scaleBarSize[2] * 1.2 + yShift,
+                col = "black"
+            )
         }
     })
     plot(c(0, 1), c(0, 1), type = "n", xlab = "", ylab = "", xaxt = "n", yaxt = "n")
@@ -193,7 +199,7 @@ addLegend <- function(Cols, Shift = c(0, 0), Cex = 0.95, Pch = 20, Main = "", Ce
 }
 makeCols <- function(features, hypFrame) {
     Cols <- setdiff(c("red", "blue", rev(palette("Set1"))[-1]), "black")
-    #Leave out grey here
+    # Leave out grey here
     if (length(Cols) > length(features)) {
         Cols <- Cols[seq_along(features)]
     }
