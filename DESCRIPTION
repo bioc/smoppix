@@ -4,7 +4,7 @@ Title: Analyze Single Molecule Spatial Omics Data Using the Probabilistic Index
 Version: 1.5.4
 Authors@R: 
     c(person(given = "Stijn", family = "Hawinkel", 
-    email = "stijn.hawinkel@psb.ugent.be", 
+    email = "stijn.hawinkel@psb.ugent.be",
     role=c("cre", "aut"), comment = c(ORCID = "0000-0002-4501-5180")))
 Description: Test for univariate and bivariate spatial patterns in 
     spatial omics data with single-molecule resolution. The tests implemented 
